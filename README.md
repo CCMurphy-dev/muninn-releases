@@ -66,6 +66,11 @@ radiology_library/
             └── ...
 ```
 
+## Documentation
+
+- [Dataset Creation Guide](docs/DATASET_CREATION_GUIDE.md) - How to create case folders, JSON files, and study notes
+- [Exam Mode Guide](docs/EXAM_MODE_GUIDE.md) - Setting up centralized exams for multiple trainees
+
 ## Requirements
 
 - Anonymized DICOM files organized in folders
