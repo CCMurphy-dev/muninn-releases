@@ -2,16 +2,104 @@
 
 Muninn Admin is the administrative companion application for Muninn. It provides tools for creating case content, building exams, grading submissions, and managing department training programs.
 
+## First Launch Setup
+
+On first launch, Muninn Admin prompts you to select your **Department Root Folder**. This is the shared network folder that contains all your department's training resources.
+
+### Setting Up
+
+1. Launch Muninn Admin for the first time
+2. The "Welcome to Muninn Admin" dialog appears
+3. Click **Browse** and select your department's shared folder
+4. The app shows the derived paths that will be used:
+   - `library/` - Case library for DICOM courses
+   - `registry/` - Trainee registry files
+   - `exams/` - Exam configurations and results
+   - `reports/` - Generated training reports
+5. Click **Continue** to save the configuration
+
+You can also click **Skip for Now** to configure this later via the Department Settings.
+
+### Changing the Department Folder
+
+To change the department folder after initial setup:
+
+1. Go to **Department** mode
+2. Click the settings gear icon
+3. Update paths as needed
+
+---
+
 ## Overview
 
-Muninn Admin has four main modes:
+Muninn Admin has five main modes:
 
 | Mode | Purpose |
 |------|---------|
+| **Organizer** | Sort messy DICOM exports into organized series folders |
 | **Case Loader** | Create metadata for DICOM cases |
 | **Exam Builder** | Create exam configurations |
 | **Exam Marking** | Grade trainee exam submissions |
 | **Department** | Manage trainee registries and generate reports |
+
+---
+
+## DICOM Organizer
+
+Organize messy DICOM exports from PACS systems into structured series folders.
+
+### Why Use This?
+
+DICOM exports from PACS viewers often come as:
+- Flat folders with hundreds of files
+- Files named with UUIDs or random numbers
+- No logical grouping by series
+- Files not sorted by slice position
+
+Muninn expects cases organized by series folders with numbered slices.
+
+### Workflow
+
+1. **Select source folder** - The folder containing your messy DICOM export
+2. **Select output folder** - Where to create the organized structure
+3. **Choose copy or move**:
+   - **Copy**: Keeps original files (safer, uses more disk space)
+   - **Move**: Deletes originals after organizing (faster, saves space)
+4. **Click Scan** - The organizer reads DICOM headers to identify series
+5. **Review detected series** - Check/uncheck series to include
+6. **Click Organize** - Files are sorted into series folders
+
+### Output Structure
+
+```
+output_folder/
+├── 01_CT_Axial_Abdomen_Pelvis/
+│   ├── 001.dcm
+│   ├── 002.dcm
+│   └── ...
+├── 02_CT_Coronal_Reformat/
+│   ├── 001.dcm
+│   └── ...
+└── 03_CT_Sagittal_Reformat/
+    └── ...
+```
+
+Files are:
+- Grouped by SeriesInstanceUID
+- Folders named by modality and series description
+- Numbered sequentially by slice position
+
+### Batch Mode
+
+For processing multiple cases at once:
+
+1. Click **Batch** to enable batch mode
+2. Select a folder containing multiple case subfolders
+3. Each subfolder should contain raw DICOM exports
+4. Process each case in turn with the Previous/Next buttons
+5. Rename organized folders to match naming convention (`NN_ID_Diagnosis`)
+
+> **Tip**: For the complete scan import workflow from PACS to Muninn, see the [Scan Import Guide](SCAN_IMPORT_GUIDE.md).
 
 ---
 
@@ -58,6 +146,59 @@ Process multiple cases in a folder:
 2. Select a parent folder containing multiple case subfolders
 3. Navigate between cases using Previous/Next buttons
 4. Progress indicator shows completion status
+
+### Course Metadata (course.json)
+
+In addition to case-level metadata, you can create course-level metadata to control how courses appear to trainees and enable filtering.
+
+**Create a `course.json` file** in each course folder:
+
+```json
+{
+  "name": "CT Abdomen Emergencies",
+  "description": "On-call CT abdomen cases for junior trainees",
+  "modality": "CT",
+  "specialty": ["abdomen", "oncall"],
+  "min_level": "ST1",
+  "recommended_levels": ["ST1", "ST2", "ST3"]
+}
+```
+
+**Fields:**
+
+| Field | Description |
+|-------|-------------|
+| `name` | Display name (overrides folder name) |
+| `description` | Short description shown to trainees |
+| `modality` | CT, MRI, XR, US, or "mixed" |
+| `specialty` | Array of specialties: general, oncall, neuro, msk, chest, abdomen, paeds, breast, cardiac, ir |
+| `min_level` | Minimum trainee level (ST1-ST5, Fellow, Consultant) |
+| `recommended_levels` | Array of levels this course is designed for |
+
+**Behavior:**
+
+- If `course.json` exists, its metadata is used for filtering
+- If not, the app infers modality from folder names (current behavior)
+- Courses without `min_level` have no level restrictions
+- Trainees can filter courses by modality, specialty, and their training level
+
+**Example folder structure:**
+
+```
+library/
+├── on-call-preparation/
+│   ├── ct-abdomen/
+│   │   ├── course.json          ← Course metadata
+│   │   ├── 01_Appendicitis/
+│   │   └── 02_Diverticulitis/
+│   └── plain-films/
+│       ├── course.json
+│       └── 01_Pneumothorax/
+└── frcr-2b-preparation/
+    └── mock-exam-1/
+        ├── course.json          ← min_level: "ST4"
+        └── 01_Complex_Case/
+```
 
 ### Multi-Component Cases
 
@@ -302,16 +443,21 @@ Department
 
 ### Network Setup for Exams
 
-For multi-trainee exams, use a shared network location:
+For multi-trainee exams, use your department's shared folder:
 
-1. **Create shared folder** accessible to all trainees
-2. **Place exam config** in the shared folder
-3. **Set results_path** to the shared folder
-4. **Ensure write permissions** for all trainees
+1. **Configure department folder** on first launch (or via Department Settings)
+2. **Exam configs** are saved to `department_root/exams/`
+3. **Results files** are saved to `department_root/exams/`
+4. **Trainee registry** is loaded from `department_root/registry/trainee_registry.json`
+
+All trainees selecting the same department folder will:
+- See the same case library
+- Submit to the same results files
+- Appear in the trainee dropdown
 
 Example paths:
-- macOS: `/Volumes/RadiologyShare/Exams/`
-- Windows: `\\server\RadiologyShare\Exams\`
+- macOS: `/Volumes/RadiologyShare/` (department root)
+- Windows: `\\server\RadiologyShare\` (department root)
 
 ---
 
@@ -323,6 +469,13 @@ Example paths:
 - Include clinical history that guides the trainee
 - Mark key findings that demonstrate the diagnosis
 - Write study notes as a model answer, not just facts
+
+### For Course Organization
+
+- Create `course.json` files to enable filtering by specialty and level
+- Set `min_level` for advanced courses (e.g., FRCR 2B prep) to prevent junior trainees from being overwhelmed
+- Use meaningful `specialty` tags so trainees can find relevant courses
+- Courses without metadata are shown to all trainees (no restrictions)
 
 ### For Exam Building
 

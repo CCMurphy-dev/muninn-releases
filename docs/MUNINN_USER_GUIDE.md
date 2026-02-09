@@ -15,12 +15,70 @@ Muninn has two main modes:
 
 ## Getting Started
 
-### Setting Up Your Library
+### First Launch - Department Setup
 
-1. Launch Muninn
-2. Enter the path to your DICOM library folder
-3. Click "Scan Library"
-4. Your courses and cases will be detected automatically
+On first launch, Muninn asks you to select your department's shared training folder.
+
+1. Launch Muninn for the first time
+2. The "Welcome to Muninn" dialog appears
+3. Click **Browse** and select the folder provided by your training coordinator
+4. Click **Continue**
+
+The app automatically:
+- Loads your department's case library
+- Connects to the trainee registry (for exam name selection)
+- Configures paths for exam submissions
+
+> **Note**: If you're not sure which folder to select, ask your training coordinator or IT department. It's typically a network drive or shared folder.
+
+You can click **Skip for Now** to configure this later, but you'll need to manually enter the library path.
+
+### Trainee Identification
+
+After setting up your department folder, Muninn prompts you to identify yourself from the trainee registry.
+
+1. A "Who are you?" dialog appears
+2. Search for your name or scroll through the list
+3. Select your name and click **Continue**
+
+Your trainee profile is used to:
+- **Personalize recommendations**: Filter courses appropriate for your training level
+- **Track your progress**: Link practice attempts and exam results to your profile
+- **Pre-fill exam details**: Your name appears automatically when taking exams
+
+Your name and training level appear in the app header. To change your profile, go to **Settings** > **Trainee Profile** > **Change**.
+
+> **Note**: If your name doesn't appear in the registry, contact your training coordinator to be added.
+
+### Manual Library Setup
+
+If you're not using a department folder, or want to use a different library:
+
+1. Enter the path to your DICOM library folder in the text field
+2. Click "Scan Library"
+3. Your courses and cases will be detected automatically
+
+### Personal Library (Optional)
+
+In addition to your department library, you can configure a personal library for your own cases:
+
+1. Go to **Settings**
+2. Scroll to the **Personal Library** section
+3. Click **Browse** and select your personal case folder
+4. Click **Save Settings**
+
+Once configured, a library switcher appears in the Library Browser header:
+
+```
+[Department] [Personal]
+```
+
+Click either button to switch between libraries. Your personal library can contain:
+- Cases you've collected independently
+- Study material from courses you've purchased
+- Cases shared by colleagues outside your department
+
+> **Note**: Trainee identification is linked to your department. When using your personal library, you remain identified as your department trainee profile.
 
 ### Library Structure
 
@@ -46,9 +104,28 @@ radiology_library/
 
 ## Practice Mode
 
+### Filtering Courses
+
+The Library Browser includes filters to help you find appropriate courses:
+
+**Modality Filter:**
+- Click modality buttons (CT, MRI, XR, US) to show only courses of that type
+- Click "All" to show all modalities
+
+**Specialty Filter:**
+- Use the dropdown to filter by specialty (Neuro, MSK, Chest, Abdomen, etc.)
+- Select "All Specialties" to show everything
+
+**Level Filter:**
+- If you've identified yourself as a trainee, you can check **"Hide courses above my level"**
+- This hides advanced courses (e.g., FRCR 2B preparation) from trainees who aren't yet at that level
+- Courses without level restrictions are always shown
+
+Filters combine with AND logic - selecting CT modality and Neuro specialty shows only CT Neuro courses.
+
 ### Starting a Practice Session
 
-1. Select a course from the library browser
+1. Select a course from the library browser (use filters to narrow down)
 2. Cases load in the order defined by the course
 3. Optionally enable shuffle mode for random order
 
@@ -135,9 +212,11 @@ Configure AI feedback in Settings:
 ### Taking an Exam
 
 1. Click **Start Exam** in the Library Browser
-2. Select your name from the dropdown (or enter manually)
-3. Click **Browse** to select the exam config file
+2. Select your name from the dropdown (if your department uses a trainee registry) or enter it manually
+3. Click **Browse** to select the exam config file (your examiner will provide this location)
 4. Click **Begin Exam**
+
+> **Tip**: If you've configured your department folder, the trainee dropdown should show your name. If not, type your name exactly as it appears in departmental records.
 
 ### During the Exam
 
@@ -180,6 +259,24 @@ Configure AI feedback in Settings:
 
 - **Theme**: Midnight, Dark, Slate, Emerald, Light
 - Themes affect the entire interface
+
+### Trainee Profile
+
+Your identified trainee profile is shown here:
+- **Name**: Your name as it appears in the registry
+- **Level**: Your training level (ST1-ST5, Fellow, Consultant)
+- **Change**: Opens the trainee selector to switch profiles (useful on shared workstations)
+
+### Department
+
+- **Department Folder**: Path to your department's shared folder
+- Click **Browse** to change the department folder
+
+### Personal Library
+
+- **Personal Library Path**: Optional path to your own case library
+- Click **Browse** to set up a personal library
+- Click **Remove** to clear the personal library configuration
 
 ### AI Configuration
 

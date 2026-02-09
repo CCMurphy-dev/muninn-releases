@@ -100,8 +100,10 @@ Administrative tools for creating content and managing training.
 - [Muninn Admin Guide](docs/MUNINN_ADMIN_GUIDE.md) - For educators using Muninn Admin
 
 ### Reference
+- [Scan Import Guide](docs/SCAN_IMPORT_GUIDE.md) - Complete workflow for importing DICOM scans
 - [Dataset Creation Guide](docs/DATASET_CREATION_GUIDE.md) - Creating case folders and metadata files
 - [Exam Mode Guide](docs/EXAM_MODE_GUIDE.md) - Setting up centralized exams
+- [Department Setup Guide](docs/DEPARTMENT_SETUP_GUIDE.md) - Network deployment for departments
 
 ---
 
@@ -110,35 +112,69 @@ Administrative tools for creating content and managing training.
 ### For Trainees
 
 1. Download and install **Muninn**
-2. Set your DICOM library path
-3. Scan and browse courses
-4. Practice cases and get AI feedback
+2. On first launch, select your department's shared folder (provided by your training coordinator)
+3. Browse courses and practice cases
+4. Take exams when assigned
 
 ### For Educators
 
 1. Download and install **Muninn Admin**
-2. Use **Case Loader** to create case metadata
-3. Use **Exam Builder** to create exam configurations
-4. Use **Department** to manage trainees
-5. Use **Marking** to grade exam submissions
+2. On first launch, select your department's shared folder
+3. Use **Case Loader** to create case metadata
+4. Use **Exam Builder** to create exam configurations
+5. Use **Department** to manage trainees
+6. Use **Marking** to grade exam submissions
+
+### For IT/Administrators
+
+See [Department Setup Guide](docs/DEPARTMENT_SETUP_GUIDE.md) for network deployment instructions.
 
 ---
 
 ## Data Structure
+
+### Department Folder (Network Deployment)
+
+For multi-user deployments, both apps use a shared department folder:
+
+```
+department_root/                    # Shared network folder
+├── library/                        # DICOM case library
+│   ├── ct-courses/
+│   │   └── ct-abdomen/
+│   │       └── 01_Acute_Appendicitis/
+│   │           ├── case_data.json
+│   │           ├── STUDY_NOTES.md
+│   │           ├── key_slices.json
+│   │           └── Axial_CT/
+│   │               └── *.dcm
+│   └── mri-courses/
+│       └── ...
+├── registry/                       # Trainee management
+│   └── trainee_registry.json
+├── exams/                          # Exam configurations and results
+│   ├── exam_config_2026_01.json
+│   └── results_2026_01.json
+└── reports/                        # Generated training reports
+    └── training_report_*.csv
+```
+
+### Single-User Setup
+
+For standalone use, cases can be in any folder:
 
 ```
 radiology_library/
 ├── ct-courses/
 │   └── ct-abdomen/
 │       └── 01_Acute_Appendicitis/
-│           ├── case_data.json      # Case metadata
-│           ├── STUDY_NOTES.md      # Model answer
-│           ├── key_slices.json     # Key findings
-│           └── Axial_CT/           # Series folder
-│               └── *.dcm           # DICOM files
+│           ├── case_data.json
+│           ├── STUDY_NOTES.md
+│           ├── key_slices.json
+│           └── Axial_CT/
+│               └── *.dcm
 └── mri-courses/
-    └── brain-mri/
-        └── ...
+    └── ...
 ```
 
 ---
