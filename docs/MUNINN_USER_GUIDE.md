@@ -221,22 +221,48 @@ Configure AI feedback in Settings:
 ### During the Exam
 
 **What's different from Practice Mode:**
-- Cases appear in fixed order (no shuffle)
+- Cases are shuffled into a random order (each trainee gets a unique order)
 - Study notes and hints are hidden
 - AI feedback is disabled
 - Key slices are not shown
 - Timer tracks time per case
+- Case navigation shows "Case 1, 2, 3..." instead of diagnoses
+
+**For Multi-Component Cases (e.g., CXR + CTPA):**
+- Components unlock sequentially
+- You must view Component 1 (e.g., CXR) before Component 2 (e.g., CTPA) becomes accessible
+- This prevents "spoilers" from later imaging
+- Locked components show a lock icon on their tab
 
 **Answering:**
 1. Review the case and clinical history
 2. Enter your findings, diagnosis, and differential
 3. Click **Submit**
-4. Your answer is saved locally AND to the central results file
-5. Click **Next Case** to continue
+4. Your answer is saved locally AND to the central tracking database
+5. Review your submitted answer
+6. **Edit** your answer if needed before moving on
+7. **Flag** the case if you want to review it later
+8. Click **Next Case** to continue (or **Show Summary** on the last case)
+
+### Exam Review and Summary
+
+After answering cases, you can review your progress:
+
+**Flagging Cases:**
+- Click the flag icon on any case to mark it for review
+- Flagged cases appear with an amber indicator
+- Use flags to mark cases you're uncertain about
+
+**Exam Summary Screen:**
+- Shows all cases with their status (Completed, Skipped, Pending)
+- Highlights flagged cases that need review
+- Click any case to go back and edit your answer
+- **Go Back** returns to the current case
+- **Finish Exam** completes the session
 
 ### After Completing
 
-- Your results are saved to the shared results file
+- Your results are saved to the department tracking database
 - Your administrator will mark your submissions
 - Results may be provided individually or as group feedback
 
@@ -250,6 +276,10 @@ Configure AI feedback in Settings:
 **Cases not loading**
 - Verify the case paths are accessible from your machine
 - Check that the DICOM files exist
+
+**Component tabs showing lock icons**
+- This is normal - view the first component before later ones unlock
+- Scroll through the images in Component 1 to unlock Component 2
 
 ---
 

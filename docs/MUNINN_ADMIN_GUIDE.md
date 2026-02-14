@@ -14,8 +14,10 @@ On first launch, Muninn Admin prompts you to select your **Department Root Folde
 4. The app shows the derived paths that will be used:
    - `library/` - Case library for DICOM courses
    - `registry/` - Trainee registry files
-   - `exams/` - Exam configurations and results
+   - `exams/` - Exam configurations
    - `reports/` - Generated training reports
+   - `tracking/practice/` - Practice activity logs
+   - `tracking/exam_results/` - Exam submissions
 5. Click **Continue** to save the configuration
 
 You can also click **Skip for Now** to configure this later via the Department Settings.
@@ -73,6 +75,7 @@ Muninn expects cases organized by series folders with numbered slices.
 
 ```
 output_folder/
+├── case_data.json                 ← Series metadata (auto-generated)
 ├── 01_CT_Axial_Abdomen_Pelvis/
 │   ├── 001.dcm
 │   ├── 002.dcm
@@ -88,6 +91,14 @@ Files are:
 - Grouped by SeriesInstanceUID
 - Folders named by modality and series description
 - Numbered sequentially by slice position
+
+The organizer automatically creates `case_data.json` containing:
+- Series metadata (UIDs, descriptions, slice counts)
+- Window/level defaults from DICOM headers
+- Image dimensions and bit depth
+- Original source path and timestamp
+
+This enables instant case loading in Muninn without re-reading DICOM headers.
 
 ### Batch Mode
 
@@ -109,13 +120,15 @@ Create the metadata files that Muninn needs to display cases.
 
 ### What It Creates
 
-For each case folder, the Case Loader generates:
+For each case folder, the Case Loader generates or updates:
 
 | File | Description |
 |------|-------------|
-| `case_data.json` | Case metadata (diagnosis, history, modality, demographics) |
+| `case_data.json` | Case metadata (diagnosis, history, modality, demographics) + preserved series data |
 | `key_slices.json` | Annotated findings with slice numbers and window settings |
 | `STUDY_NOTES.md` | Model answer in Markdown format |
+
+> **Note:** If the case was imported via the DICOM Organizer, `case_data.json` already contains series metadata. The Case Loader preserves this data when adding teaching content (diagnosis, history, key slices, etc.).
 
 ### Workflow
 
@@ -391,17 +404,21 @@ View department-wide statistics and individual progress.
 1. Go to Department → Dashboard tab
 2. Set the date range (from/to)
 3. Click "Generate Report"
-4. The report scans all exam results in the configured exams folder
+4. The report scans all activity data in the configured tracking folder:
+   - Exam results from `tracking/exam_results/`
+   - Practice logs from `tracking/practice/`
 
 #### Report Contents
 
-- **Summary statistics**: Active trainees, total cases, total exams, average score
+- **Summary statistics**: Active trainees, total cases (practice + exam), total exams, average score
 - **Per-trainee breakdown**:
-  - Cases completed
+  - Cases completed (total)
+  - Practice cases (with self-rating if provided)
+  - Exam cases
   - Exams taken
   - Average exam score
+  - Total time spent
   - Last activity date
-  - Modality breakdown
 
 #### Viewing Individual Progress
 
@@ -426,20 +443,29 @@ View department-wide statistics and individual progress.
 ```
 MUNINN ADMIN                           MUNINN (Trainee)
 ─────────────────────────────────────────────────────────
+DICOM Organizer
+  └─▶ case_data.json (series[]) ──────┐
+                                       ▼
 Case Loader                            Practice Mode
-  └─▶ case_data.json ─────────────────▶ Case display
+  └─▶ case_data.json ─────────────────▶ Case display (fast load)
+      (preserves series[], adds        │
+       diagnosis, history, etc.)       ├─▶ tracking/practice/{id}_practice.json
   └─▶ key_slices.json ────────────────▶ Key findings
   └─▶ STUDY_NOTES.md ─────────────────▶ Model answers
 
 Exam Builder                           Exam Mode
-  └─▶ exam_config.json ───────────────▶ Exam loading
+  └─▶ exams/exam_config.json ─────────▶ Exam loading
                                           │
 Exam Marking ◀────────────────────────────┘
-  └─◀ results.json                     Submissions
+  └─◀ tracking/exam_results/*.json     Submissions
 
 Department
   └─▶ trainee_registry.json ──────────▶ Name dropdown
+  └─◀ tracking/practice/*.json         Practice activity reports
+  └─◀ tracking/exam_results/*.json     Exam results reports
 ```
+
+**Performance note:** The `series[]` array in `case_data.json` contains all DICOM metadata needed for display (UIDs, descriptions, window/level, dimensions). Muninn reads this single JSON file instead of scanning DICOM headers from each series folder, enabling instant case loading even on network drives.
 
 ### Network Setup for Exams
 
@@ -447,8 +473,9 @@ For multi-trainee exams, use your department's shared folder:
 
 1. **Configure department folder** on first launch (or via Department Settings)
 2. **Exam configs** are saved to `department_root/exams/`
-3. **Results files** are saved to `department_root/exams/`
-4. **Trainee registry** is loaded from `department_root/registry/trainee_registry.json`
+3. **Results files** are saved to `department_root/tracking/exam_results/`
+4. **Practice logs** are saved to `department_root/tracking/practice/`
+5. **Trainee registry** is loaded from `department_root/registry/trainee_registry.json`
 
 All trainees selecting the same department folder will:
 - See the same case library

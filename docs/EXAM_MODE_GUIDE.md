@@ -1,15 +1,18 @@
 # Exam Mode Guide
 
-Muninn supports a centralized exam mode where multiple trainees can take the same exam and submit their results to a shared file for marking.
+Muninn supports a centralized exam mode where multiple trainees can take the same exam and submit their results to a shared database for marking.
 
 ## Overview
 
 In exam mode:
 - All trainees load the same exam configuration file
+- Cases are automatically shuffled into a random order (each trainee gets a unique order)
+- Multi-component cases unlock sequentially (e.g., view CXR before CTPA becomes accessible)
 - Cases are loaded from existing paths in the DICOM library (no duplication needed)
-- Results are submitted to a central JSON file (e.g., on a network share)
+- Results are submitted to the central tracking database (`muninn_tracking.db`)
 - Trainees select their name from a registry or enter it manually
 - Learning features (study notes, hints, AI feedback) are hidden
+- Trainees can flag cases for review and edit answers before finishing
 
 ## Setting Up an Exam (Admin)
 
@@ -40,8 +43,7 @@ Create a JSON file manually with the exam details and case references:
 ```json
 {
   "exam_name": "ST1 On-Call Exam Jan 2026",
-  "results_path": "/Volumes/Radiology/Exams/ST1-OnCall-Jan2026/results.json",
-  "trainee_registry_path": "/Volumes/Radiology/Department/trainee_registry.json",
+  "results_path": "legacy",
 
   "name": "ST1 On-Call Exam",
   "course_type": "exam",
@@ -72,12 +74,13 @@ Create a JSON file manually with the exam details and case references:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `exam_name` | Yes | Name of the exam (shown in results) |
-| `results_path` | Yes | Full path to the shared results JSON file |
-| `trainee_registry_path` | No | Path to trainee registry for name dropdown |
+| `results_path` | Yes | Legacy field (required but not used - submissions go to tracking database) |
 | `name` | Yes | Display name for the course |
 | `course_type` | No | Usually "exam" |
 | `modality` | No | "CT", "MR", "XR", "mixed", etc. |
 | `cases` | Yes | Array of case references |
+
+> **Note**: Exam submissions are stored in the department's tracking database (`muninn_tracking.db`), not the `results_path`. Trainees must have their department folder configured for submissions to work.
 
 ### Case Reference Fields
 
@@ -104,14 +107,14 @@ Place the config file somewhere accessible to all trainees:
 - Shared folder
 - Email attachment
 
-### Step 4: Create Results Directory
+### Step 4: Verify Department Setup
 
-Ensure the directory for the results file exists and is writable by all trainees:
+Ensure trainees have:
+- Department folder configured in Muninn settings
+- Write access to the tracking database (`{department_root}/tracking/muninn_tracking.db`)
+- Trainee profiles set up (for name selection)
 
-```bash
-mkdir -p /Volumes/Radiology/Exams/ST1-OnCall-Jan2026/
-chmod 777 /Volumes/Radiology/Exams/ST1-OnCall-Jan2026/
-```
+The tracking database is automatically created by Muninn Admin when setting up the department.
 
 ---
 
@@ -135,16 +138,39 @@ chmod 777 /Volumes/Radiology/Exams/ST1-OnCall-Jan2026/
 ### Step 4: Begin Exam
 
 1. Click **Begin Exam**
-2. Cases load in the order specified by the administrator
+2. Cases are automatically shuffled into a random order
 3. Learning features are automatically hidden
 
 ### Step 5: Complete Cases
 
 1. Review each case and enter your findings, diagnosis, and differential
 2. Click **Submit** when ready
-3. Your answer is saved both locally and to the central results file
-4. Click **Next Case** to proceed
-5. Repeat until all cases are complete
+3. Your answer is saved both locally and to the central tracking database
+4. Review your submitted answer on the confirmation screen
+5. **Edit** your answer if needed
+6. **Flag** the case if you want to review it later
+7. Click **Next Case** to proceed
+8. Repeat until all cases are complete
+
+### Step 6: Review and Finish
+
+1. After the last case, click **Show Summary** to review all cases
+2. The summary shows:
+   - All cases with their status (Completed, Skipped, Pending)
+   - Flagged cases highlighted for easy identification
+3. Click any case to go back and edit your answer
+4. Click **Go Back** to return to the current case
+5. Click **Finish Exam** when ready to submit
+
+### Multi-Component Cases
+
+Some cases contain multiple imaging studies (e.g., initial CXR followed by CTPA):
+
+- Component tabs appear at the top of the DICOM viewer
+- Components unlock sequentially - you must view Component 1 before Component 2 becomes accessible
+- Locked components show a lock icon
+- This prevents "spoilers" from later imaging that might give away the diagnosis
+- Once a component is unlocked, it remains accessible for that case
 
 ---
 
@@ -159,36 +185,33 @@ To maintain exam integrity, the following features are hidden:
 - **Case diagnoses**: Navigation shows "Case 1, 2, 3..." instead of diagnoses
 - **Learning mode features**: Study notes toggle is hidden
 - **Hints**: No hints available
+- **Later components**: Multi-study cases unlock sequentially to prevent spoilers
 
-Trainees only see their submitted answer and a confirmation message.
+After submission, trainees see their answer with options to edit or flag before moving on.
 
 ---
 
-## Results File Format
+## Results Storage
 
-The results file accumulates all submissions as JSON:
+Exam submissions are stored in the central department tracking database (`muninn_tracking.db`). Each submission includes:
 
-```json
-{
-  "exam_name": "ST1 On-Call Exam Jan 2026",
-  "created_at": "2026-01-15T09:00:00Z",
-  "results": [
-    {
-      "username": "John Smith",
-      "exam_name": "ST1 On-Call Exam Jan 2026",
-      "case_id": "case_01",
-      "case_path": "/Volumes/Radiology/Library/Neuro/01_Acute_MCA_Infarct",
-      "correct_diagnosis": "Acute left MCA territory infarct",
-      "submitted_diagnosis": "Left MCA infarct",
-      "submitted_findings": "Loss of grey-white differentiation in left MCA territory...",
-      "submitted_differential": "1. Acute ischaemic stroke\n2. Hypoglycaemia",
-      "submitted_management": null,
-      "time_taken_seconds": 180,
-      "exam_type": "short",
-      "submitted_at": "2026-01-15T09:05:32Z"
-    }
-  ]
-}
+| Field | Description |
+|-------|-------------|
+| `trainee_id` | Trainee identifier |
+| `trainee_name` | Trainee's display name |
+| `exam_name` | Name of the exam |
+| `case_id` | Case identifier |
+| `case_path` | Path to the case folder |
+| `correct_diagnosis` | Expected diagnosis (for marking) |
+| `submitted_diagnosis` | Trainee's submitted diagnosis |
+| `submitted_findings` | Trainee's findings |
+| `submitted_differential` | Trainee's differential diagnoses |
+| `submitted_management` | Trainee's management plan (if long form) |
+| `time_taken_seconds` | Time spent on the case |
+| `exam_type` | "short" or "long" |
+| `submitted_at` | Timestamp of submission |
+
+The database is located at `{department_root}/tracking/muninn_tracking.db` and is shared across all trainees on the network.
 ```
 
 ---
@@ -232,6 +255,9 @@ Use the **Department** tab to:
 - **Don't close the app** - Your progress is saved, but closing mid-case may lose unsaved work
 - **Check your name** - Verify your name is correct before starting
 - **Network connection** - Ensure you can access the network share throughout the exam
+- **Use flags wisely** - Flag uncertain cases to review before finishing
+- **Review before finishing** - Use the summary screen to check all your answers
+- **Multi-component cases** - View all components before answering (Component 1 unlocks Component 2)
 
 ---
 
@@ -260,3 +286,16 @@ Use the **Department** tab to:
 - Verify the `trainee_registry_path` in the config is correct
 - Check the registry file is accessible
 - Ensure the registry contains active trainees
+
+### Component tabs showing lock icons
+
+- This is expected behavior for multi-component cases
+- View and scroll through Component 1 to unlock Component 2
+- Once unlocked, components remain accessible for that case
+
+### Cases appear in different order than expected
+
+- Cases are automatically shuffled when the exam starts
+- Each trainee receives a unique random order
+- This is intentional for fair assessment
+- The original order is preserved in the exam config for marking

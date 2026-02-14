@@ -6,19 +6,19 @@ This guide covers the complete workflow for importing DICOM scans into Muninn, f
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        SCAN IMPORT WORKFLOW                                  │
+│                        SCAN IMPORT WORKFLOW                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  1. EXPORT          2. ORGANIZE         3. METADATA        4. READY         │
 │  ────────────       ────────────        ────────────       ────────────     │
-│                                                                              │
-│  PACS/Viewer   ──▶  DICOM          ──▶  Case Loader  ──▶  Library          │
+│                                                                             │
+│  PACS/Viewer   ──▶  DICOM          ──▶  Case Loader  ──▶  Library           │
 │  Export             Organizer           (Metadata)        Browser           │
-│                                                                              │
+│                                                                             │
 │  Raw DICOM          Sorted by           case_data.json    Practice &        │
 │  files              series              key_slices.json   Exam ready        │
 │                                         STUDY_NOTES.md                      │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -96,10 +96,11 @@ For importing one case at a time:
 
 ### Output Structure
 
-The organizer creates numbered series folders:
+The organizer creates numbered series folders and writes a `case_data.json` file with series metadata:
 
 ```
 01_12345_Acute_Appendicitis/
+├── case_data.json              ← Series metadata for fast loading
 ├── 01_CT_Axial_Abdomen_Pelvis/
 │   ├── 001.dcm
 │   ├── 002.dcm
@@ -116,6 +117,42 @@ Features:
 - Folders named by modality and series description
 - Files numbered sequentially by slice position
 - Consistent naming across all cases
+- **Series metadata cached in `case_data.json`** for instant loading
+
+### Series Metadata (Automatic)
+
+The organizer extracts DICOM metadata during import and writes it to `case_data.json`:
+
+```json
+{
+  "case_id": "2604212301ab",
+  "series": [
+    {
+      "series_uid": "1.2.840.113619.2.55.3.604688119",
+      "description": "CT Axial Abdomen Pelvis",
+      "modality": "CT",
+      "slice_count": 245,
+      "folder_name": "01_CT_Axial_Abdomen_Pelvis",
+      "window_width": 400,
+      "window_center": 40,
+      "rows": 512,
+      "columns": 512,
+      "bits_allocated": 16
+    }
+  ],
+  "organized_at": "2026-02-11T10:30:00Z",
+  "source_path": "/path/to/original/pacs/export"
+}
+```
+
+The `case_id` is automatically generated during organization using the format `YYDDDHHMM` + 2 random characters (e.g., `2604212301ab` = 2026, day 042, 12:30, suffix "ab"). This provides a unique identifier for each case.
+
+This metadata enables:
+- **Instant case loading** without scanning DICOM headers
+- **Network optimization** - one file read instead of reading headers from every series
+- **Preserved window/level defaults** from the original DICOM files
+
+When you later add teaching metadata with Case Loader, the `series` array is preserved alongside the new fields (diagnosis, history, etc.).
 
 ### Batch Import Workflow
 
@@ -367,8 +404,10 @@ After importing cases, verify they work correctly:
 2. Create case folder: 01_12345_Diagnosis/
            ↓
 3. DICOM Organizer → sort into series folders
+   (creates case_data.json with series metadata)
            ↓
-4. Case Loader → add metadata
+4. Case Loader → add teaching metadata
+   (preserves series[], adds diagnosis, history, etc.)
            ↓
 5. Move to library/course-type/course-name/
            ↓

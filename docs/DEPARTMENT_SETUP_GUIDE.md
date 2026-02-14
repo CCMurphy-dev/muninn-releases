@@ -20,6 +20,8 @@ Create a shared folder with the following structure:
 ```
 department_root/
 ├── library/                        # Case library (read access for all)
+│   ├── .muninn/                    # Search index (auto-generated)
+│   │   └── case_index.db           # SQLite FTS database
 │   ├── ct-courses/
 │   │   └── ct-abdomen/
 │   │       └── 01_Case_Name/
@@ -32,11 +34,15 @@ department_root/
 │       └── ...
 ├── registry/                       # Trainee management
 │   └── trainee_registry.json       # Trainee list
-├── exams/                          # Exam files (read/write for all)
-│   ├── exam_config_*.json          # Exam configurations
-│   └── results_*.json              # Exam submissions
-└── reports/                        # Generated reports (admin only)
-    └── training_report_*.csv
+├── exams/                          # Exam configurations (read for trainees)
+│   └── exam_config_*.json          # Exam configurations
+├── reports/                        # Generated reports (admin only)
+│   └── training_report_*.csv
+└── tracking/                       # Activity data (write for trainees)
+    ├── practice/                   # Practice activity logs
+    │   └── {trainee_id}_practice.json
+    └── exam_results/               # Exam submissions
+        └── {exam_name}_results.json
 ```
 
 ### Folder Naming
@@ -46,6 +52,7 @@ The subfolder names **must** be exactly:
 - `registry`
 - `exams`
 - `reports`
+- `tracking` (with subfolders `practice` and `exam_results`)
 
 Both apps derive paths from these standard names.
 
@@ -59,15 +66,19 @@ Both apps derive paths from these standard names.
 |--------|----------|------------------|
 | `library/` | Read | Read/Write |
 | `registry/` | Read | Read/Write |
-| `exams/` | Read/Write | Read/Write |
+| `exams/` | Read | Read/Write |
 | `reports/` | No access | Read/Write |
+| `tracking/` | Read/Write | Read/Write |
+| `tracking/practice/` | Read/Write | Read/Write |
+| `tracking/exam_results/` | Read/Write | Read/Write |
 
 ### Why These Permissions?
 
 - **library/**: Trainees need to read DICOM files; only educators should modify cases
 - **registry/**: Trainees need to read names for dropdown; only admins should edit
-- **exams/**: Trainees must write their exam submissions
+- **exams/**: Trainees need to read exam configurations; only educators should create exams
 - **reports/**: Contains administrative data; not for trainee access
+- **tracking/**: Trainees need write access to submit practice logs and exam results
 
 ---
 
@@ -119,6 +130,8 @@ Mount point path:
    - Registry: `department_root/registry/trainee_registry.json`
    - Exams: `department_root/exams`
    - Reports: `department_root/reports`
+   - Practice: `department_root/tracking/practice`
+   - Exam Results: `department_root/tracking/exam_results`
 5. Click **Continue**
 
 ### For Trainees (Muninn)
@@ -228,7 +241,7 @@ Exam submissions are appended to a shared results file. Multiple trainees can su
 
 ### "Failed to submit exam results"
 
-- Check trainee has write access to `exams/` folder
+- Check trainee has write access to `tracking/exam_results/` folder
 - Verify network connection is stable
 - Check disk space on network share
 
@@ -283,6 +296,45 @@ Each user should select their platform's path during first-launch setup. The exa
 
 ---
 
+## Search Index
+
+Muninn supports full-text search across all cases in the library. The search index is built by Muninn Admin and stored in the library folder.
+
+### Building the Index
+
+1. Open **Muninn Admin**
+2. On the home page, verify the library path is correct
+3. Click **Rebuild Search Index**
+4. Wait for indexing to complete (shows case count when done)
+
+The index is stored at `library/.muninn/case_index.db` (SQLite with FTS5).
+
+### What's Indexed
+
+- Case ID
+- Diagnosis
+- Clinical history
+- Body region
+- Course name
+
+### When to Rebuild
+
+Rebuild the index when:
+- New cases are added to the library
+- Case metadata is updated
+- Cases are deleted or moved
+
+Trainees cannot rebuild the index - this is an admin-only operation.
+
+### Using Search (Trainees)
+
+When the index exists, a search bar appears in Muninn's library browser. Trainees can:
+- Search by diagnosis, body region, or clinical history
+- Click a result to load that specific case directly
+- Filter results by modality
+
+---
+
 ## Maintenance
 
 ### Regular Tasks
@@ -291,6 +343,7 @@ Each user should select their platform's path during first-launch setup. The exa
 - **Archive old exam results** after marking
 - **Back up case library** regularly
 - **Generate training reports** periodically
+- **Rebuild search index** after adding new cases
 
 ### Storage Considerations
 
@@ -304,11 +357,14 @@ DICOM files are large. Plan for:
 ## Deployment Checklist
 
 - [ ] Create shared network folder
-- [ ] Set up folder structure (library, registry, exams, reports)
+- [ ] Set up folder structure (library, registry, exams, reports, tracking/practice, tracking/exam_results)
 - [ ] Configure permissions (see table above)
 - [ ] Create trainee registry
 - [ ] Add anonymized cases to library
+- [ ] Build search index (Muninn Admin home page)
 - [ ] Test access from educator machine (Muninn Admin)
 - [ ] Test access from trainee machine (Muninn)
+- [ ] Verify search works in Muninn
 - [ ] Document department folder path for users
 - [ ] Create test exam and verify submission
+- [ ] Test practice tracking (enable in trainee settings, complete a case, verify log in tracking/practice)
