@@ -19,12 +19,16 @@ Check the [Releases](https://github.com/CCMurphy-dev/muninn-releases/releases) p
 
 ### Muninn (Trainee App)
 
-Desktop application for practicing radiology with local DICOM cases.
+Desktop application for practicing radiology with curated case playlists.
+
+**Playlist-Based Learning:**
+- Browse curated playlists created by your department
+- Filter by modality (CT, MRI, XR, US) and specialty
+- Level-appropriate content filtering (ST1-Consultant)
+- Progress tracking per playlist with resume capability
+- Search within playlists
 
 **Practice Mode:**
-- Browse courses organized by modality and specialty
-- Filter by training level (ST1-ST5, Fellow, Consultant)
-- Search cases by diagnosis, body region, or clinical history
 - View DICOM images with window/level controls and presets
 - Split-pane view for comparing series side-by-side
 - Submit findings, diagnosis, differential, and management
@@ -39,15 +43,15 @@ Desktop application for practicing radiology with local DICOM cases.
 - Timed assessments with learning features hidden
 - Flag cases for review before finishing
 - Review and edit answers before final submission
-- Submit to centralized results file
+- Submit to centralized tracking database
 - Select name from department trainee registry
+- **PIN authentication** for secure exam access (if configured)
 
 **Department Integration:**
 - Connect to shared department folder for case library
 - Automatic trainee identification from registry
-- Practice activity tracking (opt-in)
+- Practice and exam activity tracking
 - Personal library option for additional cases
-- Library switcher between department and personal content
 
 ### Muninn Admin (Educator App)
 
@@ -67,15 +71,22 @@ Administrative tools for creating content and managing training.
 - Batch process multiple cases
 - Auto-populate from DICOM headers
 
+**Playlist Builder:**
+- Create curated case collections for trainees
+- Select cases from anywhere in the library
+- Add per-case notes for context
+- Set modality, specialty, and level filters
+- Reorder cases with drag-and-drop
+- Preview playlists before publishing
+
 **Exam Builder:**
 - Browse case library with DICOM preview
 - Select and reorder exam cases
-- Configure results path and trainee registry
 - Set trainee eligibility by level or specific IDs
 - Generate exam config files
 
 **Exam Marking:**
-- Load exam submissions from results file
+- Load exam submissions from tracking database
 - View trainee answers alongside DICOM images
 - Grade answers 0-10 with written feedback
 - Generate per-candidate summaries
@@ -84,10 +95,21 @@ Administrative tools for creating content and managing training.
 **Department Training:**
 - Manage trainee registries
 - Import trainees from CSV
+- **Set PINs for exam authentication**
 - Build and browse search index
 - Generate training reports for date ranges
 - Track individual trainee progress
 - View practice activity summaries
+- **View audit logs** (exam starts, submissions, marking, PIN failures)
+- **Automated database backups** with manual backup/restore
+
+**Case Database:**
+- Browse indexed cases with per-case analytics
+- View practice count, exam marks, and averages
+- See which playlists and exams use each case
+- Detailed analytics modal with unique trainees, timing, and score ranges
+- Open cases directly in Case Loader
+- **Index staleness detection** with rebuild warnings
 
 ---
 
@@ -106,14 +128,17 @@ Administrative tools for creating content and managing training.
 │            │                    │                                       │
 │            ▼                    │                                       │
 │  Case Loader ──────────────────────────────▶ Practice Mode              │
-│  (case_data.json, key_slices,   │            (browse, search, study)    │
+│  (case_data.json, key_slices,   │            (study, feedback)          │
 │   STUDY_NOTES.md)               │                                       │
+│                                 │                                       │
+│  Playlist Builder ─────────────────────────▶ Playlist Browser           │
+│  (library/playlists/*.json)     │            (browse, filter, progress) │
 │                                 │                                       │
 │  Search Index ─────────────────────────────▶ Full-text Search           │
 │  (.muninn/case_index.db)        │            (SQLite FTS5)              │
 │                                 │                                       │
 │  Exam Builder ─────────────────────────────▶ Exam Mode                  │
-│  (exam_config.json)             │            (shuffled, timed,          │
+│  (exams/exam_config.json)       │            (shuffled, timed,          │
 │                                 │             sequential unlock)        │
 │                                 │                    │                  │
 │  Exam Marking ◀────────────────────────────────────────                 │
@@ -122,6 +147,10 @@ Administrative tools for creating content and managing training.
 │  Department ───────────────────────────────▶ Trainee Selection          │
 │  (muninn_tracking.db)           │            (name dropdown, tracking)  │
 │                                 │                                       │
+│  Case Database ◀───────────────────────────▶ Per-case Analytics         │
+│  (practice/exam stats,          │            (unique trainees, timing)  │
+│   playlist/exam usage)          │                                       │
+│                                 │                                       │
 └─────────────────────────────────┴───────────────────────────────────────┘
 ```
 
@@ -129,8 +158,16 @@ Administrative tools for creating content and managing training.
 - **Local**: SQLite database (`muninn.db`) for attempt history, ratings, and personal progress
 - **Shared (Network)**:
   - Case metadata: JSON files (`case_data.json`, `key_slices.json`, `STUDY_NOTES.md`)
-  - Exam configs: JSON (`exam_config.json`)
-  - Department tracking: SQLite (`muninn_tracking.db`) for trainees, practice logs, exam submissions
+  - Playlists: JSON files in `library/playlists/` directory
+  - Exam configs: JSON files in `exams/` directory
+  - Department tracking: SQLite (`tracking/muninn_tracking.db`) with tables:
+    - `trainees` - Trainee profiles (id, name, level, email, pin_hash)
+    - `practice_attempts` - Practice session records with case, time, rating
+    - `exam_submissions` - Raw exam answers submitted by trainees
+    - `marking_entries` - Graded marks with feedback from educators
+    - `audit_log` - All critical actions (exam starts, submissions, marking, PIN failures)
+    - `backup_metadata` - Records of database backups
+  - Automated backups: `tracking/backups/` (daily, weekly, manual)
 - **Search Index**: SQLite FTS5 (`.muninn/case_index.db`) built by Admin, used by both apps
 
 ---
@@ -156,8 +193,9 @@ Administrative tools for creating content and managing training.
 1. Download and install **Muninn**
 2. On first launch, select your department's shared folder (provided by your training coordinator)
 3. Select your name from the trainee registry
-4. Browse courses and practice cases
-5. Take exams when assigned
+4. Browse playlists created by your department
+5. Click a playlist to start practicing (progress is saved automatically)
+6. Take exams when assigned
 
 ### For Educators
 
@@ -166,9 +204,11 @@ Administrative tools for creating content and managing training.
 3. Use **Organizer** to sort PACS exports into case folders
 4. Use **Case Loader** to add teaching metadata
 5. Click **Rebuild Search Index** on the home page to enable search
-6. Use **Exam Builder** to create exam configurations
-7. Use **Department** to manage trainees
-8. Use **Marking** to grade exam submissions
+6. Use **Playlist Builder** to create curated case collections for trainees
+7. Use **Exam Builder** to create exam configurations
+8. Use **Department** to manage trainees and **set PINs** for exam access
+9. Use **Marking** to grade exam submissions
+10. Review **audit logs** and **backups** in Department Settings
 
 ### For IT/Administrators
 
@@ -186,7 +226,14 @@ For multi-user deployments, both apps use a shared department folder:
 department_root/                    # Shared network folder
 ├── library/                        # DICOM case library
 │   ├── .muninn/                    # Search index (auto-generated)
-│   │   └── case_index.db           # SQLite FTS database
+│   │   └── case_index.db           # SQLite FTS database (schema v8)
+│   ├── playlists/                  # Curated case collections
+│   │   ├── on-call-essentials.json
+│   │   ├── frcr-2b-prep.json
+│   │   └── neuro-masterclass.json
+│   ├── dr-smith/                   # Consultant's case folder
+│   │   └── neuro/
+│   │       └── 01_Acute_Stroke/
 │   ├── ct-courses/
 │   │   └── ct-abdomen/
 │   │       ├── course.json         # Course-level metadata
@@ -203,8 +250,44 @@ department_root/                    # Shared network folder
 ├── reports/                        # Generated training reports
 │   └── training_report_*.csv
 └── tracking/                       # Central tracking database
-    └── muninn_tracking.db          # SQLite: trainees, practice, exam submissions
+    ├── muninn_tracking.db          # SQLite: trainees, practice_attempts,
+    │                               # exam_submissions, marking_entries,
+    │                               # audit_log, backup_metadata
+    └── backups/                    # Automated database backups
+        ├── daily/                  # Last 7 daily backups
+        ├── weekly/                 # Last 4 weekly backups
+        └── manual/                 # User-created backups
 ```
+
+### Playlist Format
+
+Playlists are JSON files that reference cases from anywhere in the library:
+
+```json
+{
+  "name": "On-Call Essentials",
+  "description": "Must-know cases for junior trainees on call",
+  "author": "Dr Smith",
+  "modality": "mixed",
+  "specialty": ["emergency", "oncall"],
+  "min_level": "ST1",
+  "recommended_levels": ["ST1", "ST2"],
+  "cases": [
+    {
+      "path": "@library/dr-smith/neuro/01_Acute_Stroke",
+      "notes": "Classic MCA territory infarct"
+    },
+    {
+      "path": "@library/ct-courses/ct-abdomen/01_Acute_Appendicitis"
+    }
+  ]
+}
+```
+
+**Path formats:**
+- `@library/path/to/case` - Relative to library root (portable)
+- `../relative/path` - Relative to playlist file location
+- `/absolute/path` - Absolute path (not portable)
 
 ### Multi-Component Cases
 
@@ -227,6 +310,8 @@ For standalone use, cases can be in any folder:
 
 ```
 radiology_library/
+├── playlists/
+│   └── my-cases.json
 ├── ct-courses/
 │   └── ct-abdomen/
 │       └── 01_Acute_Appendicitis/
@@ -238,6 +323,17 @@ radiology_library/
 └── mri-courses/
     └── ...
 ```
+
+---
+
+## Access Control
+
+**Case visibility is controlled through playlists.** Cases are only accessible to trainees if they are included in a playlist. This allows:
+
+- **Flexible organization**: Cases can be stored anywhere in the library structure
+- **Multiple access paths**: A case can appear in multiple playlists
+- **Level-appropriate content**: Playlists can specify minimum training levels
+- **Consultant workspaces**: Each consultant can have their own folder; selected cases are published via playlists
 
 ---
 

@@ -130,18 +130,29 @@ The tracking database is automatically created by Muninn Admin when setting up t
 - If a trainee registry is loaded, select your name from the dropdown
 - Otherwise, type your full name in the text field
 
-### Step 3: Load Exam Config
+### Step 3: Enter PIN (If Required)
+
+If your department has set up PIN authentication for exams:
+
+1. After selecting your name, a PIN entry dialog appears
+2. Enter your 4-6 digit PIN
+3. Click **Continue**
+4. If the PIN is incorrect, you'll see an error message - try again or contact your supervisor
+
+> **Note**: PINs are only required if configured by your department administrator. Practice mode does not require a PIN.
+
+### Step 4: Load Exam Config
 
 1. Click **Browse** to select the exam config file
 2. The exam cases will be validated
 
-### Step 4: Begin Exam
+### Step 5: Begin Exam
 
 1. Click **Begin Exam**
 2. Cases are automatically shuffled into a random order
 3. Learning features are automatically hidden
 
-### Step 5: Complete Cases
+### Step 6: Complete Cases
 
 1. Review each case and enter your findings, diagnosis, and differential
 2. Click **Submit** when ready
@@ -152,7 +163,7 @@ The tracking database is automatically created by Muninn Admin when setting up t
 7. Click **Next Case** to proceed
 8. Repeat until all cases are complete
 
-### Step 6: Review and Finish
+### Step 7: Review and Finish
 
 1. After the last case, click **Show Summary** to review all cases
 2. The summary shows:
@@ -212,7 +223,21 @@ Exam submissions are stored in the central department tracking database (`muninn
 | `submitted_at` | Timestamp of submission |
 
 The database is located at `{department_root}/tracking/muninn_tracking.db` and is shared across all trainees on the network.
-```
+
+### Audit Logging
+
+All exam activity is logged to the audit trail:
+
+| Action | When Logged |
+|--------|-------------|
+| `exam_start` | When trainee clicks "Begin Exam" |
+| `exam_submit` | When trainee submits a case answer |
+| `pin_failed` | When PIN verification fails (if using PINs) |
+
+This audit trail can be used for:
+- ARCP evidence (proving when trainees took exams)
+- Security review (detecting unusual activity)
+- Troubleshooting (tracking submission issues)
 
 ---
 
@@ -299,3 +324,16 @@ Use the **Department** tab to:
 - Each trainee receives a unique random order
 - This is intentional for fair assessment
 - The original order is preserved in the exam config for marking
+
+### PIN entry failing
+
+- Ensure you're entering the correct 4-6 digit PIN
+- PINs are numeric only (no letters or symbols)
+- If you've forgotten your PIN, contact your supervisor or training coordinator
+- Administrators can view and reset PINs in Muninn Admin > Department > Registry
+- Failed PIN attempts are logged for security
+
+### PIN entry not appearing
+
+- PIN authentication is optional - your department may not require it
+- If you expect a PIN but don't see the dialog, check with your administrator

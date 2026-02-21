@@ -32,29 +32,23 @@ department_root/
 │   │               └── *.dcm
 │   └── mri-courses/
 │       └── ...
-├── registry/                       # Trainee management
-│   └── trainee_registry.json       # Trainee list
 ├── exams/                          # Exam configurations (read for trainees)
 │   └── exam_config_*.json          # Exam configurations
 ├── reports/                        # Generated reports (admin only)
 │   └── training_report_*.csv
-└── tracking/                       # Activity data (write for trainees)
-    ├── practice/                   # Practice activity logs
-    │   └── {trainee_id}_practice.json
-    └── exam_results/               # Exam submissions
-        └── {exam_name}_results.json
+└── tracking/                       # Central tracking database
+    └── muninn_tracking.db          # SQLite: trainees, practice, exams
 ```
 
 ### Folder Naming
 
 The subfolder names **must** be exactly:
 - `library`
-- `registry`
 - `exams`
 - `reports`
-- `tracking` (with subfolders `practice` and `exam_results`)
+- `tracking`
 
-Both apps derive paths from these standard names.
+Both apps derive paths from these standard names. The trainee registry is stored within `muninn_tracking.db`, not as a separate JSON file.
 
 ---
 
@@ -65,20 +59,16 @@ Both apps derive paths from these standard names.
 | Folder | Trainees | Educators/Admins |
 |--------|----------|------------------|
 | `library/` | Read | Read/Write |
-| `registry/` | Read | Read/Write |
 | `exams/` | Read | Read/Write |
 | `reports/` | No access | Read/Write |
 | `tracking/` | Read/Write | Read/Write |
-| `tracking/practice/` | Read/Write | Read/Write |
-| `tracking/exam_results/` | Read/Write | Read/Write |
 
 ### Why These Permissions?
 
 - **library/**: Trainees need to read DICOM files; only educators should modify cases
-- **registry/**: Trainees need to read names for dropdown; only admins should edit
 - **exams/**: Trainees need to read exam configurations; only educators should create exams
 - **reports/**: Contains administrative data; not for trainee access
-- **tracking/**: Trainees need write access to submit practice logs and exam results
+- **tracking/**: Contains `muninn_tracking.db` - trainees need write access to submit practice logs and exam results; they also read from it for trainee selection
 
 ---
 
@@ -127,11 +117,9 @@ Mount point path:
 3. Browse to the department folder
 4. The app shows derived paths for verification:
    - Library: `department_root/library`
-   - Registry: `department_root/registry/trainee_registry.json`
    - Exams: `department_root/exams`
    - Reports: `department_root/reports`
-   - Practice: `department_root/tracking/practice`
-   - Exam Results: `department_root/tracking/exam_results`
+   - Tracking DB: `department_root/tracking/muninn_tracking.db`
 5. Click **Continue**
 
 ### For Trainees (Muninn)
@@ -160,13 +148,13 @@ The trainee's name and level appear in the app header. They can change their pro
 
 ## Creating the Trainee Registry
 
-Before trainees can take exams with name selection, create a trainee registry.
+Before trainees can take exams with name selection, create a trainee registry. Trainees are stored in the `muninn_tracking.db` database.
 
 ### Using Muninn Admin
 
 1. Open Muninn Admin
 2. Go to **Department** > **Registry** tab
-3. Click **Create Registry**
+3. Click **Initialize Department** (creates the tracking database)
 4. Enter department name
 5. Add trainees manually or import from CSV
 
@@ -178,26 +166,52 @@ John Smith,j.smith@hospital.nhs.uk,ST3,Dr A. Jones
 Jane Doe,j.doe@hospital.nhs.uk,ST2,Dr B. Williams
 ```
 
-### Registry File Format
+### Tracking Database Structure
 
-```json
-{
-  "department": "St Mary's Radiology",
-  "updated_at": "2026-02-09T10:00:00Z",
-  "trainees": [
-    {
-      "id": "jsmith",
-      "name": "John Smith",
-      "email": "j.smith@hospital.nhs.uk",
-      "level": "ST3",
-      "supervisor": "Dr A. Jones",
-      "active": true
-    }
-  ]
-}
-```
+The trainee registry and all activity data are stored in `tracking/muninn_tracking.db`:
 
-Save this file as `department_root/registry/trainee_registry.json`.
+| Table | Purpose |
+|-------|---------|
+| `trainees` | Trainee profiles (id, name, level, email, supervisor, active, pin_hash) |
+| `practice_attempts` | Practice session records with case, time, rating |
+| `exam_submissions` | Raw exam answers submitted by trainees |
+| `marking_entries` | Graded marks with feedback from educators |
+| `audit_log` | All critical actions (exam starts, submissions, marking, PIN failures) |
+| `backup_metadata` | Records of database backups |
+
+---
+
+## PIN Authentication
+
+For formal assessments (ARCP evidence), you may require trainees to enter a PIN before starting exams.
+
+### Setting Up PINs
+
+1. Open **Muninn Admin** > **Department** > **Registry** tab
+2. Find the trainee in the list
+3. Click the **PIN** column button (shows "Not Set" or "Set")
+4. Enter a 4-6 digit PIN and confirm it
+5. Click **Save PIN**
+
+### How PIN Authentication Works
+
+- **Practice mode**: No PIN required - trainees can practice freely
+- **Exam mode**: If a trainee has a PIN set, they must enter it before starting any exam
+- **Failed attempts**: All failed PIN attempts are logged to the audit trail
+
+### PIN Security
+
+- PINs are stored as Argon2 hashes (not plain text)
+- Original PINs cannot be recovered - only reset by administrators
+- Use unique PINs per trainee; don't share PINs
+
+### When to Use PINs
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Formal ARCP assessments | **Required** - ensures identity verification |
+| Formative exams | Optional - depends on policy |
+| Practice sessions | Not applicable - PINs only apply to exams |
 
 ---
 
@@ -241,20 +255,21 @@ Exam submissions are appended to a shared results file. Multiple trainees can su
 
 ### "Failed to submit exam results"
 
-- Check trainee has write access to `tracking/exam_results/` folder
+- Check trainee has write access to `tracking/` folder
+- Verify `muninn_tracking.db` exists and is not locked
 - Verify network connection is stable
 - Check disk space on network share
 
 ### "Trainees not appearing in dropdown"
 
-- Verify `registry/trainee_registry.json` exists
-- Check trainee has read access to `registry/` folder
-- Ensure trainees are marked as `"active": true`
+- Verify `tracking/muninn_tracking.db` exists
+- Check trainee has read access to `tracking/` folder
+- Ensure trainees are marked as active in the database
 
 ### "Trainee identification not prompting"
 
 - Ensure the department folder is configured (check Settings)
-- Verify the trainee registry exists at `department_root/registry/trainee_registry.json`
+- Verify the tracking database exists at `department_root/tracking/muninn_tracking.db`
 - The prompt only appears after department setup is complete
 
 ### "Cases not loading in exam"
@@ -262,6 +277,19 @@ Exam submissions are appended to a shared results file. Multiple trainees can su
 - Verify case paths in exam config are absolute paths
 - Check paths are accessible from trainee machines
 - Ensure case folders contain valid DICOM files
+
+### "PIN entry failing"
+
+- PINs are 4-6 digits only (no letters or symbols)
+- Trainee may be entering the wrong PIN
+- Check audit log for `pin_failed` entries
+- Administrator can reset the PIN in Muninn Admin
+
+### "Database backup not created"
+
+- Verify write permissions to `tracking/backups/` folder
+- Check available disk space
+- Manual backup can be created via Department Settings
 
 ### Different path on different platforms
 
@@ -293,6 +321,26 @@ Each user should select their platform's path during first-launch setup. The exa
 - Exam configs are not encrypted - trainees could read correct answers
 - For high-stakes exams, consider controlled exam environments
 - Results files can be viewed by anyone with access to `exams/` folder
+- **Use PIN authentication** for formal assessments to verify trainee identity
+
+### Audit Logging
+
+All critical actions are automatically logged to the `audit_log` table in the tracking database:
+
+| Action | What's Logged |
+|--------|---------------|
+| `exam_start` | Trainee started an exam |
+| `exam_submit` | Trainee submitted a case answer |
+| `pin_failed` | Failed PIN verification attempt |
+| `mark_entered` | Examiner marked a submission |
+| `trainee_added/modified/removed` | Registry changes |
+| `pin_changed` | PIN set or cleared |
+
+Export audit logs for compliance evidence:
+1. **Muninn Admin** > **Department** > Settings gear
+2. Scroll to **Audit Log** section
+3. Filter by date range and action type
+4. Click **Export CSV**
 
 ---
 
@@ -326,6 +374,18 @@ Rebuild the index when:
 
 Trainees cannot rebuild the index - this is an admin-only operation.
 
+### Index Staleness Detection
+
+Muninn Admin automatically detects when indexed cases are out of date:
+
+- **Modified cases**: `case_data.json` files edited since indexing
+- **Missing cases**: Case folders deleted or moved
+
+On startup, if stale cases are detected, an amber warning banner appears:
+> "X case(s) in the index may be outdated."
+
+Click **Rebuild Index** to update the index.
+
 ### Using Search (Trainees)
 
 When the index exists, a search bar appears in Muninn's library browser. Trainees can:
@@ -337,13 +397,40 @@ When the index exists, a search bar appears in Muninn's library browser. Trainee
 
 ## Maintenance
 
+### Database Backups
+
+The tracking database (`muninn_tracking.db`) contains all trainee records, exam submissions, and marks. Protect it with regular backups.
+
+**Automatic Backups:**
+- Created daily on Muninn Admin startup (if none exists for today)
+- Stored in `tracking/backups/daily/`
+- Last 7 daily + 4 weekly backups retained
+
+**Manual Backups:**
+1. **Muninn Admin** > **Department** > Settings gear
+2. Scroll to **Database Backups** section
+3. Click **Create Backup**
+4. Backup saved to `tracking/backups/manual/`
+
+**Restoring from Backup:**
+1. Open the backup list in Department Settings
+2. Select a backup and click **Restore**
+3. Confirm the restore action
+
+**When to Create Manual Backups:**
+- Before bulk trainee imports
+- Before major exam marking sessions
+- Before software updates
+- Before migrating to a new server
+
 ### Regular Tasks
 
 - **Update trainee registry** when staff rotate
-- **Archive old exam results** after marking
-- **Back up case library** regularly
+- **Review audit logs** periodically for security
+- **Set PINs** for trainees taking formal assessments
 - **Generate training reports** periodically
 - **Rebuild search index** after adding new cases
+- **Verify backups** are being created automatically
 
 ### Storage Considerations
 
@@ -357,14 +444,18 @@ DICOM files are large. Plan for:
 ## Deployment Checklist
 
 - [ ] Create shared network folder
-- [ ] Set up folder structure (library, registry, exams, reports, tracking/practice, tracking/exam_results)
+- [ ] Set up folder structure (library, exams, reports, tracking)
 - [ ] Configure permissions (see table above)
-- [ ] Create trainee registry
+- [ ] Initialize department and create trainee registry (Muninn Admin > Department)
 - [ ] Add anonymized cases to library
 - [ ] Build search index (Muninn Admin home page)
+- [ ] **Set PINs for trainees who will take formal exams**
 - [ ] Test access from educator machine (Muninn Admin)
 - [ ] Test access from trainee machine (Muninn)
 - [ ] Verify search works in Muninn
 - [ ] Document department folder path for users
 - [ ] Create test exam and verify submission
-- [ ] Test practice tracking (enable in trainee settings, complete a case, verify log in tracking/practice)
+- [ ] **Test PIN authentication flow** (if using PINs)
+- [ ] Test practice tracking (enable in trainee settings, complete a case, verify in Case Database analytics)
+- [ ] **Verify automatic backups** are being created in `tracking/backups/`
+- [ ] **Review audit log** to confirm actions are being recorded
