@@ -1,351 +1,219 @@
-# Muninn Releases
+# Muninn - FRCR 2B Radiology Exam Training Software
 
-Downloads and documentation for Muninn and Muninn Admin - radiology training tools for local DICOM libraries.
+> **Practice radiology reporting with your own DICOM cases. Built for UK radiology trainees preparing for FRCR 2B.**
 
-## Downloads
-
-Check the [Releases](https://github.com/CCMurphy-dev/muninn-releases/releases) page for the latest versions.
-
-| Platform | Muninn | Muninn Admin |
-|----------|--------|--------------|
-| macOS (Apple Silicon) | `.dmg` ending in `aarch64` | `.dmg` ending in `aarch64` |
-| macOS (Intel) | `.dmg` ending in `x86_64` | `.dmg` ending in `x86_64` |
-| Windows | `.msi` or `.exe` installer | `.msi` or `.exe` installer |
-| Linux | `.AppImage` or `.deb` | `.AppImage` or `.deb` |
+[![License](https://img.shields.io/badge/license-proprietary-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey.svg)]()
 
 ---
 
-## The Apps
+## What is Muninn?
 
-### Muninn (Trainee App)
+**Muninn** is a desktop application suite for radiology training departments to create structured exam practice environments using their own DICOM case libraries.
 
-Desktop application for practicing radiology with curated case playlists.
+Named after one of Odin's ravens (meaning "memory" in Old Norse), Muninn helps trainees build pattern recognition and reporting skills through deliberate practice.
 
-**Playlist-Based Learning:**
-- Browse curated playlists created by your department
-- Filter by modality (CT, MRI, XR, US) and specialty
-- Level-appropriate content filtering (ST1-Consultant)
-- Progress tracking per playlist with resume capability
-- Search within playlists
+### The Problem
 
-**Practice Mode:**
-- View DICOM images with window/level controls and presets
-- Split-pane view for comparing series side-by-side
-- Submit findings, diagnosis, differential, and management
-- Get AI-powered feedback (Cerebras, Google AI, OpenAI, Anthropic, Ollama)
-- Review model answers, study notes, and key findings
-- Self-rate performance and track progress over time
+- FRCR 2B exam preparation requires practicing with real cases
+- Commercial question banks don't reflect your department's case mix
+- Sharing cases via email/USB is disorganized and hard to track
+- No way to run mock exams with proper timing and conditions
 
-**Exam Mode:**
-- Load exam configurations created by administrators
-- Shuffled case order for fair assessment (each trainee gets a unique order)
-- Sequential component unlock for multi-study cases (e.g., view CXR before CTPA unlocks)
-- Timed assessments with learning features hidden
-- Flag cases for review before finishing
-- Review and edit answers before final submission
-- Submit to centralized tracking database
-- Select name from department trainee registry
-- **PIN authentication** for secure exam access (if configured)
+### The Solution
 
-**Department Integration:**
-- Connect to shared department folder for case library
-- Automatic trainee identification from registry
-- Practice and exam activity tracking
-- Personal library option for additional cases
-
-### Muninn Admin (Educator App)
-
-Administrative tools for creating content and managing training.
-
-**DICOM Organizer:**
-- Sort PACS exports into organized case folders
-- Auto-generate unique Case IDs
-- Extract and cache series metadata
-- Batch process multiple cases
-- Handle multi-study cases (e.g., CXR + CTPA)
-
-**Case Loader:**
-- Create metadata for DICOM cases
-- Mark key findings with slice annotations
-- Write study notes and model answers
-- Batch process multiple cases
-- Auto-populate from DICOM headers
-
-**Playlist Builder:**
-- Create curated case collections for trainees
-- Select cases from anywhere in the library
-- Add per-case notes for context
-- Set modality, specialty, and level filters
-- Reorder cases with drag-and-drop
-- Preview playlists before publishing
-
-**Exam Builder:**
-- Browse case library with DICOM preview
-- Select and reorder exam cases
-- Set trainee eligibility by level or specific IDs
-- Generate exam config files
-
-**Exam Marking:**
-- Load exam submissions from tracking database
-- View trainee answers alongside DICOM images
-- Grade answers 0-10 with written feedback
-- Generate per-candidate summaries
-- Export marks to JSON or CSV
-
-**Department Training:**
-- Manage trainee registries
-- Import trainees from CSV
-- **Set PINs for exam authentication**
-- Build and browse search index
-- Generate training reports for date ranges
-- Track individual trainee progress
-- View practice activity summaries
-- **View audit logs** (exam starts, submissions, marking, PIN failures)
-- **Automated database backups** with manual backup/restore
-
-**Case Database:**
-- Browse indexed cases with per-case analytics
-- View practice count, exam marks, and averages
-- See which playlists and exams use each case
-- Detailed analytics modal with unique trainees, timing, and score ranges
-- Open cases directly in Case Loader
-- **Index staleness detection** with rebuild warnings
+Muninn provides:
+- **Centralized case library** on your department network
+- **Structured practice** with findings, diagnosis, and management fields
+- **Mock exam mode** with timing, shuffled cases, and result tracking
+- **Progress analytics** for trainees and training programme directors
+- **Offline-first** - works on air-gapped NHS networks
 
 ---
 
-## Architecture
+## Features
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         MUNINN ECOSYSTEM                                │
-├─────────────────────────────────┬───────────────────────────────────────┤
-│         MUNINN ADMIN            │              MUNINN                   │
-│       [Educator Tool]           │         [Trainee Tool]                │
-├─────────────────────────────────┼───────────────────────────────────────┤
-│                                 │                                       │
-│  DICOM Organizer                │  Local SQLite DB (muninn.db)          │
-│  (sort PACS, generate CaseID)   │  (attempts, progress, history)        │
-│            │                    │                                       │
-│            ▼                    │                                       │
-│  Case Loader ──────────────────────────────▶ Practice Mode              │
-│  (case_data.json, key_slices,   │            (study, feedback)          │
-│   STUDY_NOTES.md)               │                                       │
-│                                 │                                       │
-│  Playlist Builder ─────────────────────────▶ Playlist Browser           │
-│  (library/playlists/*.json)     │            (browse, filter, progress) │
-│                                 │                                       │
-│  Search Index ─────────────────────────────▶ Full-text Search           │
-│  (.muninn/case_index.db)        │            (SQLite FTS5)              │
-│                                 │                                       │
-│  Exam Builder ─────────────────────────────▶ Exam Mode                  │
-│  (exams/exam_config.json)       │            (shuffled, timed,          │
-│                                 │             sequential unlock)        │
-│                                 │                    │                  │
-│  Exam Marking ◀────────────────────────────────────────                 │
-│  (muninn_tracking.db)           │            (submissions to DB)        │
-│                                 │                                       │
-│  Department ───────────────────────────────▶ Trainee Selection          │
-│  (muninn_tracking.db)           │            (name dropdown, tracking)  │
-│                                 │                                       │
-│  Case Database ◀───────────────────────────▶ Per-case Analytics         │
-│  (practice/exam stats,          │            (unique trainees, timing)  │
-│   playlist/exam usage)          │                                       │
-│                                 │                                       │
-└─────────────────────────────────┴───────────────────────────────────────┘
-```
+### For Trainees (Muninn)
 
-**Storage:**
-- **Local**: SQLite database (`muninn.db`) for attempt history, ratings, and personal progress
-- **Shared (Network)**:
-  - Case metadata: JSON files (`case_data.json`, `key_slices.json`, `STUDY_NOTES.md`)
-  - Playlists: JSON files in `library/playlists/` directory
-  - Exam configs: JSON files in `exams/` directory
-  - Department tracking: SQLite (`tracking/muninn_tracking.db`) with tables:
-    - `trainees` - Trainee profiles (id, name, level, email, pin_hash)
-    - `practice_attempts` - Practice session records with case, time, rating
-    - `exam_submissions` - Raw exam answers submitted by trainees
-    - `marking_entries` - Graded marks with feedback from educators
-    - `audit_log` - All critical actions (exam starts, submissions, marking, PIN failures)
-    - `backup_metadata` - Records of database backups
-  - Automated backups: `tracking/backups/` (daily, weekly, manual)
-- **Search Index**: SQLite FTS5 (`.muninn/case_index.db`) built by Admin, used by both apps
+| Feature | Description |
+|---------|-------------|
+| **DICOM Viewer** | Full windowing, presets, scroll, split-pane comparison |
+| **Practice Mode** | Submit findings, diagnosis, differential, management |
+| **AI Feedback** | Optional AI-powered feedback (Cerebras, Google, OpenAI, Anthropic, Ollama) |
+| **Self-Assessment** | Rate your confidence, track improvement over time |
+| **Exam Mode** | Timed assessments, hidden answers, shuffled case order |
+| **Progress Tracking** | See your practice history across all sessions |
+| **Playlist Learning** | Work through curated case collections |
+
+### For Educators (Muninn Loader)
+
+| Feature | Description |
+|---------|-------------|
+| **DICOM Organizer** | Sort PACS exports into structured case folders |
+| **Case Editor** | Add model answers, key findings, study notes |
+| **Playlist Builder** | Create curated collections for different training levels |
+| **Exam Builder** | Set up mock exams with time limits and eligibility |
+| **Marking Interface** | Grade submissions with written feedback |
+| **Trainee Management** | Registry, PIN authentication, progress reports |
+| **Audit Logging** | Track exam starts, submissions, and marking |
+| **Automated Backups** | Daily and weekly backups of tracking database |
 
 ---
 
-## Documentation
+## Screenshots
 
-### User Guides
-- [Muninn User Guide](docs/MUNINN_USER_GUIDE.md) - For trainees using Muninn
-- [Muninn Admin Guide](docs/MUNINN_ADMIN_GUIDE.md) - For educators using Muninn Admin
-
-### Reference
-- [Scan Import Guide](docs/SCAN_IMPORT_GUIDE.md) - Complete workflow for importing DICOM scans
-- [Dataset Creation Guide](docs/DATASET_CREATION_GUIDE.md) - Creating case folders and metadata files
-- [Exam Mode Guide](docs/EXAM_MODE_GUIDE.md) - Setting up centralized exams
-- [Department Setup Guide](docs/DEPARTMENT_SETUP_GUIDE.md) - Network deployment for departments
+*Coming soon*
 
 ---
 
-## Quick Start
-
-### For Trainees
-
-1. Download and install **Muninn**
-2. On first launch, select your department's shared folder (provided by your training coordinator)
-3. Select your name from the trainee registry
-4. Browse playlists created by your department
-5. Click a playlist to start practicing (progress is saved automatically)
-6. Take exams when assigned
-
-### For Educators
-
-1. Download and install **Muninn Admin**
-2. On first launch, select your department's shared folder
-3. Use **Organizer** to sort PACS exports into case folders
-4. Use **Case Loader** to add teaching metadata
-5. Click **Rebuild Search Index** on the home page to enable search
-6. Use **Playlist Builder** to create curated case collections for trainees
-7. Use **Exam Builder** to create exam configurations
-8. Use **Department** to manage trainees and **set PINs** for exam access
-9. Use **Marking** to grade exam submissions
-10. Review **audit logs** and **backups** in Department Settings
-
-### For IT/Administrators
-
-See [Department Setup Guide](docs/DEPARTMENT_SETUP_GUIDE.md) for network deployment instructions.
-
----
-
-## Data Structure
-
-### Department Folder (Network Deployment)
-
-For multi-user deployments, both apps use a shared department folder:
+## How It Works
 
 ```
-department_root/                    # Shared network folder
-├── library/                        # DICOM case library
-│   ├── .muninn/                    # Search index (auto-generated)
-│   │   └── case_index.db           # SQLite FTS database (schema v8)
-│   ├── playlists/                  # Curated case collections
-│   │   ├── on-call-essentials.json
-│   │   ├── frcr-2b-prep.json
-│   │   └── neuro-masterclass.json
-│   ├── dr-smith/                   # Consultant's case folder
-│   │   └── neuro/
-│   │       └── 01_Acute_Stroke/
-│   ├── ct-courses/
-│   │   └── ct-abdomen/
-│   │       ├── course.json         # Course-level metadata
-│   │       └── 01_Acute_Appendicitis/
-│   │           ├── case_data.json
-│   │           ├── STUDY_NOTES.md
-│   │           ├── key_slices.json
-│   │           └── Axial_CT/
-│   │               └── *.dcm
-│   └── mri-courses/
-│       └── ...
-├── exams/                          # Exam configurations
-│   └── exam_config_2026_01.json
-├── reports/                        # Generated training reports
-│   └── training_report_*.csv
-└── tracking/                       # Central tracking database
-    ├── muninn_tracking.db          # SQLite: trainees, practice_attempts,
-    │                               # exam_submissions, marking_entries,
-    │                               # audit_log, backup_metadata
-    └── backups/                    # Automated database backups
-        ├── daily/                  # Last 7 daily backups
-        ├── weekly/                 # Last 4 weekly backups
-        └── manual/                 # User-created backups
-```
-
-### Playlist Format
-
-Playlists are JSON files that reference cases from anywhere in the library:
-
-```json
-{
-  "name": "On-Call Essentials",
-  "description": "Must-know cases for junior trainees on call",
-  "author": "Dr Smith",
-  "modality": "mixed",
-  "specialty": ["emergency", "oncall"],
-  "min_level": "ST1",
-  "recommended_levels": ["ST1", "ST2"],
-  "cases": [
-    {
-      "path": "@library/dr-smith/neuro/01_Acute_Stroke",
-      "notes": "Classic MCA territory infarct"
-    },
-    {
-      "path": "@library/ct-courses/ct-abdomen/01_Acute_Appendicitis"
-    }
-  ]
-}
-```
-
-**Path formats:**
-- `@library/path/to/case` - Relative to library root (portable)
-- `../relative/path` - Relative to playlist file location
-- `/absolute/path` - Absolute path (not portable)
-
-### Multi-Component Cases
-
-For cases with multiple imaging studies (e.g., initial CXR followed by CTPA):
-
-```
-multi_study_case/
-├── case_data.json
-├── 01_Initial_CXR/               # Component 1 (always visible in exams)
-│   └── *.dcm
-└── 02_CTPA/                      # Component 2 (unlocked after viewing component 1)
-    └── *.dcm
-```
-
-In exam mode, components unlock sequentially - trainees must view the CXR before the CTPA becomes accessible. This prevents "spoilers" from later imaging.
-
-### Single-User Setup
-
-For standalone use, cases can be in any folder:
-
-```
-radiology_library/
-├── playlists/
-│   └── my-cases.json
-├── ct-courses/
-│   └── ct-abdomen/
-│       └── 01_Acute_Appendicitis/
-│           ├── case_data.json
-│           ├── STUDY_NOTES.md
-│           ├── key_slices.json
-│           └── Axial_CT/
-│               └── *.dcm
-└── mri-courses/
-    └── ...
+┌──────────────────┐     ┌──────────────────┐
+│  MUNINN LOADER   │     │     MUNINN       │
+│  (Admin Tool)    │     │  (Trainee Tool)  │
+├──────────────────┤     ├──────────────────┤
+│                  │     │                  │
+│  Import DICOM    │     │                  |
+│                  │     |                  | 
+│                  │     |                  |
+│   Create Cases   │     |   Browse Cases   │
+│                  │     |                  |
+│  Build Playlists │────▶│  Practice Mode   │
+│                  │     │       ↓          │
+│                  │     │  Track Progress  │
+│                  │     │       ↓          │
+│  Create Exams    │────▶│  Take Exams      │
+│       ↓          │     │       ↓          │
+│  Mark Exams      │◀────│  Submit Results  │
+│                  │     │                  │
+└────────┬─────────┘     └────────┬─────────┘
+         │                        │
+         └────────────┬───────────┘
+                      ↓
+         ┌────────────────────────┐
+         │   Shared Network       │
+         │   Department Folder    │
+         │                        │
+         │  • Case Library        │
+         │  • Tracking Database   │
+         │  • Trainee Registry    │
+         │  • Exam Configs        │
+         └────────────────────────┘
 ```
 
 ---
 
-## Access Control
+## Download
 
-**Case visibility is controlled through playlists.** Cases are only accessible to trainees if they are included in a playlist. This allows:
+Download the latest version from the [Releases](https://github.com/CCMurphy-dev/muninn-releases/releases) page.
 
-- **Flexible organization**: Cases can be stored anywhere in the library structure
-- **Multiple access paths**: A case can appear in multiple playlists
-- **Level-appropriate content**: Playlists can specify minimum training levels
-- **Consultant workspaces**: Each consultant can have their own folder; selected cases are published via playlists
+| Platform | Muninn (Trainee) | Muninn Loader (Admin) |
+|----------|------------------|----------------------|
+| **Windows** | `.msi` installer | `.msi` installer |
+| **macOS (Apple Silicon)** | `.dmg` (`aarch64`) | `.dmg` (`aarch64`) |
+| **macOS (Intel)** | `.dmg` (`x64`) | `.dmg` (`x64`) |
+
+### macOS Installation Note
+
+After mounting the DMG and dragging to Applications, you may need to run:
+```bash
+xattr -cr /Applications/Muninn.app
+```
+This removes the quarantine flag for unsigned apps.
+
+---
+
+## Licensing
+
+Muninn requires a per-department license. Licenses are:
+- **Offline-verified** - no internet required after activation
+- **Annual subscription** - with 30-day grace period for renewal
+- **Unlimited trainees** - per department, not per seat
+
+**Request a license:** [christopher.murphy@stgeorges.nhs.uk](mailto:christopher.murphy@stgeorges.nhs.uk?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
 
 ---
 
 ## Requirements
 
-- Anonymized DICOM files organized in folders
-- API keys for AI feedback (optional, for Muninn)
+- **Windows 10/11** or **macOS 12+**
+- Anonymized DICOM files (standard NHS PACS export)
+- Network share for multi-user deployment (optional)
+- AI API key for feedback feature (optional)
 
-## License
+---
 
-Private - Not for distribution
+## Documentation
 
-## Author
+- [Getting Started Guide](docs/GETTING_STARTED.md)
+- [Department Setup](docs/DEPARTMENT_SETUP_GUIDE.md)
+- [Exam Mode Guide](docs/EXAM_MODE_GUIDE.md)
+- [Case Creation Guide](docs/DATASET_CREATION_GUIDE.md)
 
-Dr Christopher Murphy
+---
+
+## Use Cases
+
+### Mock FRCR 2B Exams
+Create timed exam sessions with 6 short cases and 3 long cases. Trainees see shuffled case order, hidden diagnoses, and submit structured reports. Educators mark centrally with written feedback.
+
+### Departmental Teaching Library
+Build a searchable library of interesting cases from your PACS. Consultants contribute cases, registrars practice with structured feedback, and TPDs track engagement.
+
+### On-Call Preparation
+Curate playlists of "must-know" emergency cases for junior trainees. Track who has completed each playlist before they go on call.
+
+### MDT Case Review
+Create playlists around upcoming MDT cases for pre-meeting preparation.
+
+---
+
+## FAQ
+
+**Q: Can trainees cheat in exam mode?**
+A: Exam mode hides model answers, shuffles case order per trainee, and supports PIN authentication. All submissions are logged with timestamps.
+
+**Q: Does it work on hospital networks?**
+A: Yes. Muninn is offline-first with no cloud dependencies. All data stays on your local network.
+
+**Q: What DICOM formats are supported?**
+A: Standard DICOM files from any modality. Multi-frame, CT, MRI, CR, DX all supported.
+
+**Q: Can I use my own AI provider?**
+A: Yes. Supports Cerebras, Google AI, OpenAI, Anthropic, and local Ollama models.
+
+**Q: How is data backed up?**
+A: Automated daily and weekly backups of the tracking database, plus manual backup/restore.
+
+---
+
+## About
+
+Created by **Dr Christopher Murphy**, Radiology Registrar, St George's Hospital NHS Foundation Trust.
+
+Built with [Tauri](https://tauri.app), [Svelte](https://svelte.dev), and [Cornerstone.js](https://cornerstonejs.org).
+
+---
+
+## Contact
+
+- **License inquiries:** [christopher.murphy@stgeorges.nhs.uk](mailto:christopher.murphy@stgeorges.nhs.uk?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
+- **Bug reports:** [GitHub Issues](https://github.com/CCMurphy-dev/muninn-releases/issues)
+- **Feature requests:** [GitHub Discussions](https://github.com/CCMurphy-dev/muninn-releases/discussions)
+
+---
+
+## Legal
+
+- [Privacy Policy](PRIVACY_POLICY.md)
+- [Terms of Use](TERMS_OF_USE.md)
+- [Medical Disclaimer](MEDICAL_DISCLAIMER.md)
+
+**Important:** Muninn is a training tool for educational purposes only. It is not intended for clinical diagnosis, does not provide formal accreditation, and does not replace supervised radiology training. See the [Medical Disclaimer](MEDICAL_DISCLAIMER.md) for full details.
+
+---
+
+## Keywords
+
+FRCR 2B, radiology training, DICOM viewer, radiology exam preparation, medical imaging education, UK radiology, NHS radiology training, mock radiology exam, radiology case library, radiology reporting practice
