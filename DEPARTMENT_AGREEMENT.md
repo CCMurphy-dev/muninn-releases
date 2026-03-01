@@ -21,7 +21,7 @@
 
 ## 1. License Grant
 
-The Licensor grants the Licensee Department a non-exclusive, non-transferable license to use Muninn and Muninn Loader ("the Software") for the license period specified in the issued license file.
+The Licensor grants the Licensee Department a non-exclusive, non-transferable license to use Muninn and Muninn Admin ("the Software") for the license period specified in the issued license file.
 
 - **Scope:** One department
 - **Term:** One year from issue date, renewable annually
