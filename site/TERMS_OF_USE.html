@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use - Muninn</title>
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark')}})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="legal.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">&#x1F426;</span>
+                Muninn
+            </a>
+            <div class="nav-links">
+                <a href="index.html#features">Features</a>
+                <a href="index.html#download">Download</a>
+                <a href="index.html#docs">Docs</a>
+            </div>
+            <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <span class="icon-sun" aria-hidden="true">&#x2600;&#xFE0F;</span>
+                <span class="icon-moon" aria-hidden="true">&#x1F319;</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="legal-page">
+        <div class="container">
+            <h1>Terms of Use</h1>
+            <p class="last-updated">Last Updated: 27 February 2026</p>
+
+            <section>
+                <h2>License</h2>
+                <p>Use of Muninn requires a valid license key. Licenses are issued per-department, non-transferable, and subject to annual renewal.</p>
+            </section>
+
+            <section>
+                <h2>Permitted Use</h2>
+                <p>Muninn is provided for <strong>educational and training purposes</strong> within radiology departments.</p>
+            </section>
+
+            <section>
+                <h2>Restrictions</h2>
+                <p>You may not:</p>
+                <ul>
+                    <li>Use the Software without a valid license</li>
+                    <li>Reverse engineer, decompile, or modify the Software</li>
+                    <li>Redistribute or sublicense the Software</li>
+                    <li>Remove license verification or proprietary notices</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Your Responsibilities</h2>
+                <p>Your department is responsible for:</p>
+                <ul>
+                    <li>Anonymizing DICOM data before import</li>
+                    <li>Managing trainee data in accordance with your institutional policies</li>
+                    <li>Accuracy of any case content you create</li>
+                    <li>Compliance with local data protection regulations</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Disclaimer</h2>
+                <p>THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. The developer is not liable for any damages arising from use of the Software.</p>
+            </section>
+
+            <section>
+                <h2>Governing Law</h2>
+                <p>These terms are governed by the laws of England and Wales.</p>
+            </section>
+
+            <section>
+                <h2>Contact</h2>
+                <p>Questions: <a href="mailto:REDACTED?subject=[MUNINN]">REDACTED</a></p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-legal">
+                <a href="PRIVACY_POLICY.html">Privacy Policy</a>
+                <a href="TERMS_OF_USE.html">Terms of Use</a>
+                <a href="MEDICAL_DISCLAIMER.html">Medical Disclaimer</a>
+            </div>
+            <p class="footer-copyright">&copy; 2026 Dr Christopher Murphy</p>
+        </div>
+    </footer>
+    <script>
+    (function() {
+        var toggle = document.querySelector('.theme-toggle');
+        if (!toggle) return;
+        function getEffectiveTheme() {
+            var stored = localStorage.getItem('theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function setTheme(theme, withTransition) {
+            if (withTransition) document.body.classList.add('theme-transition');
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (withTransition) setTimeout(function() { document.body.classList.remove('theme-transition'); }, 350);
+        }
+        toggle.addEventListener('click', function() {
+            var current = getEffectiveTheme();
+            setTheme(current === 'dark' ? 'light' : 'dark', true);
+        });
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

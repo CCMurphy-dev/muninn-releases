@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muninn - FRCR 2B Radiology Training Software</title>
+    <meta name="description" content="Practice radiology reporting with your own DICOM cases. Built for UK radiology trainees preparing for FRCR 2B.">
+    <meta name="keywords" content="FRCR 2B, radiology training, DICOM viewer, radiology exam preparation, medical imaging education, UK radiology, NHS">
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark')}})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-icon">&#x1F426;</span>
+                Muninn
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#download">Download</a>
+                <a href="#docs">Docs</a>
+                <a href="https://github.com/CCMurphy-dev/muninn-releases" class="nav-github" target="_blank">GitHub</a>
+            </div>
+            <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <span class="icon-sun" aria-hidden="true">&#x2600;&#xFE0F;</span>
+                <span class="icon-moon" aria-hidden="true">&#x1F319;</span>
+            </button>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Practice radiology reporting with your own cases</h1>
+            <p class="hero-subtitle">Muninn is desktop software for radiology departments to create structured exam practice environments using their own DICOM libraries. Built for UK trainees preparing for FRCR 2B.</p>
+            <div class="hero-actions">
+                <a href="#download" class="btn btn-primary">Download</a>
+                <a href="#how-it-works" class="btn btn-secondary">Learn More</a>
+            </div>
+            <div class="hero-image">
+                <div class="screenshot-placeholder">
+                    <span>Screenshots coming soon</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="problem" id="problem">
+        <div class="container">
+            <h2>The Problem</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">&#x1F4DA;</div>
+                    <h3>Limited Resources</h3>
+                    <p>Commercial question banks don't reflect your department's case mix or teaching priorities.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">&#x1F4C1;</div>
+                    <h3>Disorganised Sharing</h3>
+                    <p>Sharing cases via email or USB drives is chaotic and impossible to track.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">&#x23F1;</div>
+                    <h3>No Exam Conditions</h3>
+                    <p>No way to run mock exams with proper timing, shuffled cases, and result tracking.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">&#x1F512;</div>
+                    <h3>Network Restrictions</h3>
+                    <p>Cloud-based solutions don't work on air-gapped NHS networks.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Features</h2>
+
+            <div class="feature-section">
+                <h3 class="feature-section-title">For Trainees</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F5BC;</div>
+                        <h4>DICOM Viewer</h4>
+                        <p>Full windowing controls, presets, scroll, and split-pane comparison.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x270D;</div>
+                        <h4>Practice Mode</h4>
+                        <p>Submit findings, diagnosis, differential, and management in structured fields.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F916;</div>
+                        <h4>AI Feedback</h4>
+                        <p>Optional AI-powered feedback using Anthropic, OpenAI, Google, Cerebras, or local Ollama.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F3AF;</div>
+                        <h4>Self-Assessment</h4>
+                        <p>Rate your confidence and track improvement over time.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x23F0;</div>
+                        <h4>Exam Mode</h4>
+                        <p>Timed assessments with hidden answers and shuffled case order.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F4C8;</div>
+                        <h4>Progress Tracking</h4>
+                        <p>See your practice history and improvement across all sessions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-section">
+                <h3 class="feature-section-title">For Educators</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F4C2;</div>
+                        <h4>DICOM Organizer</h4>
+                        <p>Sort PACS exports into structured case folders automatically.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F4DD;</div>
+                        <h4>Case Editor</h4>
+                        <p>Add model answers, key findings, and study notes to cases.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F4CB;</div>
+                        <h4>Playlist Builder</h4>
+                        <p>Create curated collections for different training levels.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F4C4;</div>
+                        <h4>Exam Builder</h4>
+                        <p>Set up mock exams with time limits and trainee eligibility.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x2705;</div>
+                        <h4>Marking Interface</h4>
+                        <p>Grade submissions centrally with written feedback.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">&#x1F465;</div>
+                        <h4>Trainee Management</h4>
+                        <p>Registry, PIN authentication, and progress reports.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="workflow">
+                <div class="workflow-column">
+                    <h3>Muninn Admin</h3>
+                    <div class="workflow-steps">
+                        <div class="workflow-step">
+                            <span class="step-number">1</span>
+                            <span>Import DICOM from PACS</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">2</span>
+                            <span>Create cases with model answers</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">3</span>
+                            <span>Build playlists and exams</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">4</span>
+                            <span>Mark submissions with feedback</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="workflow-arrow">&#x2194;</div>
+                <div class="workflow-column">
+                    <h3>Muninn <span class="tag">Trainee</span></h3>
+                    <div class="workflow-steps">
+                        <div class="workflow-step">
+                            <span class="step-number">1</span>
+                            <span>Browse case library</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">2</span>
+                            <span>Practice with instant feedback</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">3</span>
+                            <span>Take timed mock exams</span>
+                        </div>
+                        <div class="workflow-step">
+                            <span class="step-number">4</span>
+                            <span>Track progress over time</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="shared-storage">
+                <div class="storage-icon">&#x1F4BE;</div>
+                <div class="storage-text">
+                    <strong>Shared Department Folder</strong>
+                    <span>Case library, tracking database, trainee registry, exam configs</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="use-cases" id="use-cases">
+        <div class="container">
+            <h2>Use Cases</h2>
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <h3>Mock FRCR 2B Exams</h3>
+                    <p>Create timed exam sessions with short and long cases. Trainees see shuffled case order, hidden diagnoses, and submit structured reports. Educators mark centrally with written feedback.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>Departmental Teaching Library</h3>
+                    <p>Build a searchable library of interesting cases from your PACS. Consultants contribute cases, registrars practice with structured feedback, and TPDs track engagement.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>On-Call Preparation</h3>
+                    <p>Curate playlists of "must-know" emergency cases for junior trainees. Track who has completed each playlist before they go on call.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>MDT Case Review</h3>
+                    <p>Create playlists around upcoming MDT cases for pre-meeting preparation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download" id="download">
+        <div class="container">
+            <h2>Download</h2>
+            <p class="download-subtitle">Download the latest version for your platform.</p>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-icon">&#x1F5A5;</div>
+                    <h3>Windows</h3>
+                    <p>Windows 10/11</p>
+                    <a href="https://github.com/CCMurphy-dev/muninn-releases/releases" class="btn btn-download">Download .msi</a>
+                </div>
+                <div class="download-card">
+                    <div class="download-icon">&#x1F34E;</div>
+                    <h3>macOS (Apple Silicon)</h3>
+                    <p>macOS 12+ (M1/M2/M3)</p>
+                    <a href="https://github.com/CCMurphy-dev/muninn-releases/releases" class="btn btn-download">Download .dmg</a>
+                </div>
+                <div class="download-card">
+                    <div class="download-icon">&#x1F34E;</div>
+                    <h3>macOS (Intel)</h3>
+                    <p>macOS 12+ (x64)</p>
+                    <a href="https://github.com/CCMurphy-dev/muninn-releases/releases" class="btn btn-download">Download .dmg</a>
+                </div>
+            </div>
+            <div class="download-note">
+                <p><strong>Note:</strong> Muninn requires a department license. <a href="mailto:REDACTED?subject=[MUNINN-LIC] License Inquiry">Request a license</a></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="docs" id="docs">
+        <div class="container">
+            <h2>Documentation</h2>
+            <div class="docs-grid">
+                <a href="https://github.com/CCMurphy-dev/muninn-releases/blob/main/docs/MUNINN_USER_GUIDE.md" class="docs-card">
+                    <h3>User Guide</h3>
+                    <p>Getting started for trainees</p>
+                </a>
+                <a href="https://github.com/CCMurphy-dev/muninn-releases/blob/main/docs/MUNINN_ADMIN_GUIDE.md" class="docs-card">
+                    <h3>Admin Guide</h3>
+                    <p>Setup and management for educators</p>
+                </a>
+                <a href="https://github.com/CCMurphy-dev/muninn-releases/blob/main/docs/DEPARTMENT_SETUP_GUIDE.md" class="docs-card">
+                    <h3>Department Setup</h3>
+                    <p>Network deployment guide</p>
+                </a>
+                <a href="https://github.com/CCMurphy-dev/muninn-releases/blob/main/docs/EXAM_MODE_GUIDE.md" class="docs-card">
+                    <h3>Exam Mode</h3>
+                    <p>Running mock examinations</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="licensing" id="licensing">
+        <div class="container">
+            <h2>Licensing</h2>
+            <div class="license-info">
+                <div class="license-features">
+                    <div class="license-feature">
+                        <span class="check">&#x2713;</span>
+                        <span>Per-department license</span>
+                    </div>
+                    <div class="license-feature">
+                        <span class="check">&#x2713;</span>
+                        <span>Unlimited trainees</span>
+                    </div>
+                    <div class="license-feature">
+                        <span class="check">&#x2713;</span>
+                        <span>Offline verification</span>
+                    </div>
+                    <div class="license-feature">
+                        <span class="check">&#x2713;</span>
+                        <span>Annual subscription</span>
+                    </div>
+                </div>
+                <a href="mailto:REDACTED?subject=[MUNINN-LIC] License Inquiry" class="btn btn-primary">Request a License</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">&#x1F426;</span>
+                    <span>Muninn</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/CCMurphy-dev/muninn-releases">GitHub</a>
+                    <a href="https://github.com/CCMurphy-dev/muninn-releases/issues">Bug Reports</a>
+                    <a href="mailto:REDACTED">Contact</a>
+                </div>
+                <div class="footer-legal">
+                    <a href="PRIVACY_POLICY.html">Privacy Policy</a>
+                    <a href="TERMS_OF_USE.html">Terms of Use</a>
+                    <a href="MEDICAL_DISCLAIMER.html">Medical Disclaimer</a>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p><strong>Important:</strong> Muninn is a training tool for educational purposes only. It is not intended for clinical diagnosis, does not provide formal accreditation, and does not replace supervised radiology training.</p>
+            </div>
+            <div class="footer-credit">
+                <p>Created by Dr Christopher Murphy, Radiology Registrar, St George's Hospital NHS Foundation Trust</p>
+                <p>Built with <a href="https://tauri.app">Tauri</a>, <a href="https://svelte.dev">Svelte</a>, and <a href="https://cornerstonejs.org">Cornerstone.js</a></p>
+            </div>
+        </div>
+    </footer>
+    <script>
+    (function() {
+        var toggle = document.querySelector('.theme-toggle');
+        if (!toggle) return;
+        function getEffectiveTheme() {
+            var stored = localStorage.getItem('theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function setTheme(theme, withTransition) {
+            if (withTransition) document.body.classList.add('theme-transition');
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (withTransition) setTimeout(function() { document.body.classList.remove('theme-transition'); }, 350);
+        }
+        toggle.addEventListener('click', function() {
+            var current = getEffectiveTheme();
+            setTheme(current === 'dark' ? 'light' : 'dark', true);
+        });
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

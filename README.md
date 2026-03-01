@@ -45,7 +45,7 @@ Muninn provides:
 | **Progress Tracking** | See your practice history across all sessions |
 | **Playlist Learning** | Work through curated case collections |
 
-### For Educators (Muninn Loader)
+### For Educators (Muninn Admin)
 
 | Feature | Description |
 |---------|-------------|
@@ -70,7 +70,7 @@ Muninn provides:
 
 ```
 ┌──────────────────┐     ┌──────────────────┐
-│  MUNINN LOADER   │     │     MUNINN       │
+│   MUNINN ADMIN   │     │     MUNINN       │
 │  (Admin Tool)    │     │  (Trainee Tool)  │
 ├──────────────────┤     ├──────────────────┤
 │                  │     │                  │
@@ -108,7 +108,7 @@ Muninn provides:
 
 Download the latest version from the [Releases](https://github.com/CCMurphy-dev/muninn-releases/releases) page.
 
-| Platform | Muninn (Trainee) | Muninn Loader (Admin) |
+| Platform | Muninn (Trainee) | Muninn Admin |
 |----------|------------------|----------------------|
 | **Windows** | `.msi` installer | `.msi` installer |
 | **macOS (Apple Silicon)** | `.dmg` (`aarch64`) | `.dmg` (`aarch64`) |
