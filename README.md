@@ -1,6 +1,6 @@
 # Muninn - FRCR 2B Radiology Exam Training Software
 
-> **Practice radiology reporting with your own DICOM cases. Built for UK radiology trainees preparing for FRCR 2B.**
+> **Practice radiology reporting with local Departmental DICOM cases.**
 
 [![License](https://img.shields.io/badge/license-proprietary-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey.svg)]()
