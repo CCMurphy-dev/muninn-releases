@@ -1,4 +1,4 @@
-# Muninn - FRCR 2B Radiology Exam Training Software
+# Muninn - Radiology Training Software
 
 > **Practice radiology reporting with local Departmental DICOM cases.**
 
@@ -10,8 +10,6 @@
 ## What is Muninn?
 
 **Muninn** is a desktop application suite for radiology training departments to create structured exam practice environments using their own DICOM case libraries.
-
-Named after one of Odin's ravens (meaning "memory" in Old Norse), Muninn helps trainees build pattern recognition and reporting skills through deliberate practice.
 
 ### The Problem
 
