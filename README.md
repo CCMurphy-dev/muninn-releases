@@ -1,9 +1,12 @@
-# Muninn - Radiology Training Software
-
-> **Practice radiology reporting with local Departmental DICOM cases.**
+<div align="center">
+  <img src="docs/muninn-icon.png" alt="Muninn" width="96" height="96">
+  <h1>Muninn - Radiology Training Software</h1>
+  <p><strong>Practice radiology reporting with local Departmental DICOM cases.</strong></p>
 
 [![License](https://img.shields.io/badge/license-proprietary-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey.svg)]()
+
+</div>
 
 ---
 
