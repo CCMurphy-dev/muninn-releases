@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/muninn-icon.png" alt="Muninn" width="96" height="96">
+  <img src="docs/muninn-logo.png" alt="Muninn" width="120" height="120">
   <h1>Muninn - Radiology Training Software</h1>
   <p><strong>Practice radiology reporting with local Departmental DICOM cases.</strong></p>
 
