@@ -50,8 +50,9 @@ Muninn provides:
 | **DICOM Organizer** | Sort PACS exports into structured case folders |
 | **Case Editor** | Add model answers, key findings, study notes |
 | **Playlist Builder** | Create curated collections for different training levels |
-| **Exam Builder** | Set up mock exams with time limits and eligibility |
-| **Marking Interface** | Grade submissions with written feedback |
+| **Exam Builder** | Set up mock exams with time limits, eligibility, and marking scheme |
+| **Marking Interface** | Grade submissions with three scoring modes: legacy (0–10), dimension, or RCR CR2B (0–5) |
+| **Dimension Analytics** | Per-exam breakdown of detection, description, diagnosis, and management scores |
 | **Trainee Management** | Registry, PIN authentication, progress reports |
 | **Audit Logging** | Track exam starts, submissions, and marking |
 | **Automated Backups** | Daily and weekly backups of tracking database |
@@ -144,10 +145,12 @@ Muninn requires a per-department license. Licenses are:
 
 ## Documentation
 
-- [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Department Setup](docs/DEPARTMENT_SETUP_GUIDE.md)
+- [User Guide (Muninn)](docs/MUNINN_USER_GUIDE.md)
+- [Admin Guide (Muninn Admin)](docs/MUNINN_ADMIN_GUIDE.md)
 - [Exam Mode Guide](docs/EXAM_MODE_GUIDE.md)
 - [Case Creation Guide](docs/DATASET_CREATION_GUIDE.md)
+- [Technical Reference](docs/TECHNICAL_REFERENCE.md)
 
 ---
 
@@ -170,7 +173,7 @@ Create playlists around upcoming MDT cases for pre-meeting preparation.
 ## FAQ
 
 **Q: Can trainees cheat in exam mode?**
-A: Exam mode hides model answers, shuffles case order per trainee, and supports PIN authentication. All submissions are logged with timestamps.
+A: Exam mode hides model answers, shuffles case order per trainee, and supports PIN authentication. All submissions are logged with timestamps. Optional time limits auto-submit the exam when time expires, recording any unanswered cases as not submitted.
 
 **Q: Does it work on hospital networks?**
 A: Yes. Muninn is offline-first with no cloud dependencies. All data stays on your local network.

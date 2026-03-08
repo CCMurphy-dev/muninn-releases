@@ -49,6 +49,10 @@ Create a JSON file manually with the exam details and case references:
   "course_type": "exam",
   "modality": "mixed",
 
+  "marking_scheme": "rcr_cr2b",
+  "time_limit_minutes": 75,
+  "eligible_levels": ["ST1", "ST2"],
+
   "cases": [
     {
       "id": "case_01",
@@ -69,26 +73,19 @@ Create a JSON file manually with the exam details and case references:
 }
 ```
 
-### Configuration Fields
+### Configuration Options
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `exam_name` | Yes | Name of the exam (shown in results) |
-| `results_path` | Yes | Legacy field (required but not used - submissions go to tracking database) |
-| `name` | Yes | Display name for the course |
-| `course_type` | No | Usually "exam" |
-| `modality` | No | "CT", "MR", "XR", "mixed", etc. |
-| `cases` | Yes | Array of case references |
+The exam config file (created by Exam Builder, or manually) supports these settings:
 
-> **Note**: Exam submissions are stored in the department's tracking database (`muninn_tracking.db`), not the `results_path`. Trainees must have their department folder configured for submissions to work.
+| Setting | Description |
+|---------|-------------|
+| Exam Name | Shown to trainees and used to look up results in Muninn Admin |
+| Marking Scheme | Legacy (0–10), Dimension (structured sub-scores), or RCR CR2B (0–5) |
+| Time Limit | Optional total duration in minutes — omit for untimed |
+| Eligibility | Restrict by trainee level or specific trainees — omit for open access |
+| Cases | List of case folder paths and expected diagnoses (diagnoses are for marking only; not shown to trainees) |
 
-### Case Reference Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier for the case (used in results) |
-| `path` | Yes | Full path to the case folder in the DICOM library |
-| `diagnosis` | No | Correct diagnosis (for marking - not shown to trainees) |
+> For the full JSON field reference, see the [Technical Reference](TECHNICAL_REFERENCE.md).
 
 ### Step 2: Set Up Trainee Registry (Optional)
 
@@ -185,6 +182,22 @@ Some cases contain multiple imaging studies (e.g., initial CXR followed by CTPA)
 
 ---
 
+## Timed Exams
+
+When an exam has a `time_limit_minutes` set, Muninn shows a countdown timer in the header.
+
+**Trainee experience:**
+- Timer is visible throughout the exam
+- When time expires, the exam automatically ends
+- Any unanswered cases are recorded as **not submitted** — blank submissions are created in the tracking database so the examiner can see which cases were skipped
+- Any in-progress answer is lost, so trainees should submit as they go
+
+**Examiner visibility:**
+- In the marking interface, not-submitted cases show an amber banner: *"Not submitted — no answer was provided for this case"*
+- These cases can be left unmarked or scored as zero
+
+---
+
 ## What's Hidden in Exam Mode
 
 To maintain exam integrity, the following features are hidden:
@@ -195,7 +208,6 @@ To maintain exam integrity, the following features are hidden:
 - **AI feedback**: AI feedback is disabled during exam mode
 - **Case diagnoses**: Navigation shows "Case 1, 2, 3..." instead of diagnoses
 - **Learning mode features**: Study notes toggle is hidden
-- **Hints**: No hints available
 - **Later components**: Multi-study cases unlock sequentially to prevent spoilers
 
 After submission, trainees see their answer with options to edit or flag before moving on.
@@ -204,40 +216,11 @@ After submission, trainees see their answer with options to edit or flag before 
 
 ## Results Storage
 
-Exam submissions are stored in the central department tracking database (`muninn_tracking.db`). Each submission includes:
+Exam submissions are stored in the central department tracking database at `{department_root}/tracking/muninn_tracking.db`, shared across all trainees on the network. Each submission records the trainee's answers, time taken per case, and whether the case was actually submitted or left unanswered (e.g. if the exam timer expired).
 
-| Field | Description |
-|-------|-------------|
-| `trainee_id` | Trainee identifier |
-| `trainee_name` | Trainee's display name |
-| `exam_name` | Name of the exam |
-| `case_id` | Case identifier |
-| `case_path` | Path to the case folder |
-| `correct_diagnosis` | Expected diagnosis (for marking) |
-| `submitted_diagnosis` | Trainee's submitted diagnosis |
-| `submitted_findings` | Trainee's findings |
-| `submitted_differential` | Trainee's differential diagnoses |
-| `submitted_management` | Trainee's management plan (if long form) |
-| `time_taken_seconds` | Time spent on the case |
-| `exam_type` | "short" or "long" |
-| `submitted_at` | Timestamp of submission |
+All exam activity — starts, submissions, and failed PIN attempts — is also written to an audit log that can be exported from Muninn Admin for ARCP evidence.
 
-The database is located at `{department_root}/tracking/muninn_tracking.db` and is shared across all trainees on the network.
-
-### Audit Logging
-
-All exam activity is logged to the audit trail:
-
-| Action | When Logged |
-|--------|-------------|
-| `exam_start` | When trainee clicks "Begin Exam" |
-| `exam_submit` | When trainee submits a case answer |
-| `pin_failed` | When PIN verification fails (if using PINs) |
-
-This audit trail can be used for:
-- ARCP evidence (proving when trainees took exams)
-- Security review (detecting unusual activity)
-- Troubleshooting (tracking submission issues)
+> For the full database schema and field definitions, see the [Technical Reference](TECHNICAL_REFERENCE.md).
 
 ---
 
@@ -251,10 +234,27 @@ This audit trail can be used for:
 4. Review their submissions:
    - View their answers alongside the DICOM images
    - Navigate through cases using the case list
-5. **Mark each answer**:
-   - Score 0-10
-   - Add written feedback
-6. **Save marks** as JSON or **Export to CSV**
+   - Cases with an **amber banner** were not submitted (exam expired before the trainee answered them)
+5. **Mark each answer** using the scoring interface for your exam's marking scheme
+6. Marks are **auto-saved** as you work
+7. **Export CSV** to generate a spreadsheet with all marks, feedback, and time taken (in minutes)
+
+### Marking Schemes
+
+Muninn Admin supports three marking schemes, configured per exam:
+
+#### Legacy (0–10)
+The default scheme. Enter a single score (0–10) and free-text feedback for each case. Simple and flexible.
+
+#### Dimension Scoring
+Marks are split across four clinical dimensions: Detection, Description, Diagnosis, and Management. Each dimension has a configurable maximum score and weight (set per-case in `case_data.json`).
+
+- Enter a score for each dimension
+- A **critical miss** flag is available for cases where a critical finding was completely missed
+- Muninn Admin shows aggregate analytics per exam: average scores per dimension, weakest skill, and critical miss count
+
+#### RCR CR2B (0–5)
+A holistic 0–5 mark per case using the official RCR FRCR Part 2B marking descriptors. Suitable for mock FRCR 2B sessions.
 
 ### Generating Reports
 

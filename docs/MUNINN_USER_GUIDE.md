@@ -211,11 +211,16 @@ Configure AI feedback in Settings:
 
 **What's different from Practice Mode:**
 - Cases are shuffled into a random order (each trainee gets a unique order)
-- Study notes and hints are hidden
+- Study notes are hidden
 - AI feedback is disabled
 - Key slices are not shown
 - Timer tracks time per case
 - Case navigation shows "Case 1, 2, 3..." instead of diagnoses
+
+**Timed exams:**
+- If the exam has a time limit, a countdown timer appears in the header
+- When time runs out the exam ends automatically — any unanswered cases are recorded as not submitted
+- Submit answers as you go; don't leave cases blank and rely on going back at the end
 
 **For Multi-Component Cases (e.g., CXR + CTPA):**
 - Components unlock sequentially
@@ -315,7 +320,6 @@ Your identified trainee profile is shown here:
 ### Study Options
 
 - **Hide Spoilers**: Hides diagnosis from case list
-- **Show Hints**: Enables hint system (if available)
 - **Auto-advance**: Automatically load next case after rating
 
 ### History
@@ -334,48 +338,6 @@ Your identified trainee profile is shown here:
 | ←/→ | Previous/Next slice |
 | Scroll | Navigate slices |
 | Click+Drag | Adjust window/level |
-
----
-
-## Data Files
-
-Muninn reads these files from each case folder:
-
-### case_data.json
-
-```json
-{
-  "diagnosis": "Acute Appendicitis",
-  "history": "25-year-old with RLQ pain and fever",
-  "modality": "CT",
-  "body_region": "Abdomen",
-  "difficulty": "Bread & Butter",
-  "differential": ["Appendicitis", "Mesenteric adenitis", "Crohn's"]
-}
-```
-
-### key_slices.json
-
-```json
-[
-  {
-    "series_index": 0,
-    "slice_number": 85,
-    "finding": "Dilated appendix (12mm)",
-    "window_width": 400,
-    "window_level": 40
-  }
-]
-```
-
-### STUDY_NOTES.md
-
-Markdown file containing:
-- Key findings
-- Diagnosis explanation
-- Differential considerations
-- Management recommendations
-- Teaching points
 
 ---
 

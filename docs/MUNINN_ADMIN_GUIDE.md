@@ -128,15 +128,13 @@ Create the metadata files that Muninn needs to display cases.
 
 ### What It Creates
 
-For each case folder, the Case Loader generates or updates:
+For each case folder, the Case Loader generates or updates three files:
 
-| File | Description |
-|------|-------------|
-| `case_data.json` | Case metadata (diagnosis, history, modality, demographics) + preserved series data |
-| `key_slices.json` | Annotated findings with slice numbers and window settings |
-| `STUDY_NOTES.md` | Model answer in Markdown format |
+- **Case metadata** — diagnosis, history, modality, patient demographics, difficulty
+- **Key findings** — annotated slices with window settings and descriptions
+- **Study notes** — the model answer in Markdown format
 
-> **Note:** If the case was imported via the DICOM Organizer, `case_data.json` already contains series metadata. The Case Loader preserves this data when adding teaching content (diagnosis, history, key slices, etc.).
+If the case was imported via the DICOM Organizer, the existing series data is preserved when you save from the Case Loader.
 
 ### Workflow
 
@@ -226,43 +224,9 @@ Click **Playlists** in the navigation bar to enter Playlist Builder mode.
    - Click **Save Playlist**
    - Playlists are saved to `library/playlists/`
 
-### Playlist File Format
-
-Playlists are stored as JSON files in `library/playlists/`:
-
-```json
-{
-  "name": "On-Call Essentials",
-  "description": "Must-know cases for junior trainees on call",
-  "author": "Dr Smith",
-  "created_at": "2026-02-14T10:00:00Z",
-  "modality": "mixed",
-  "specialty": ["emergency", "oncall"],
-  "min_level": "ST1",
-  "recommended_levels": ["ST1", "ST2"],
-  "cases": [
-    {
-      "path": "@library/dr-smith/neuro/01_Acute_Stroke",
-      "notes": "Classic MCA territory infarct"
-    },
-    {
-      "path": "@library/ct-courses/ct-abdomen/01_Acute_Appendicitis"
-    }
-  ]
-}
-```
-
 ### Path Formats
 
-Playlist case paths support three formats:
-
-| Format | Example | Best For |
-|--------|---------|----------|
-| `@library/...` | `@library/ct-courses/case_01` | Portable across departments |
-| `../...` | `../shared/case_01` | Relative to playlist file |
-| Absolute | `/Volumes/Radiology/case_01` | Local use only |
-
-**Recommendation**: Use `@library/` paths for portability. These resolve to the library root regardless of where the department folder is mounted.
+When cases are added via the Playlist Builder UI, paths are saved automatically. If you're editing playlist files directly, use `@library/...` paths for portability — these resolve relative to the library root regardless of where the department folder is mounted on different machines. Absolute paths work but will break if the share is remounted at a different path.
 
 ### Access Control via Playlists
 
@@ -310,7 +274,12 @@ A JSON configuration file containing:
 
 5. **Configure exam settings**:
    - **Exam Name**: Displayed to trainees and in results
-   - **Eligible Levels**: Which trainee levels can take this exam
+   - **Time Limit**: Optional total exam duration in minutes. Leave empty for untimed exams. When set, a countdown timer is shown to trainees and unanswered cases are recorded as *not submitted* when time expires.
+   - **Marking Scheme**: How submissions will be scored:
+     - **Legacy (0–10)**: Free-text mark entry per case (default)
+     - **Dimension Scoring**: Marks split across Detection, Description, Diagnosis, and Management using per-case rubric weights from `case_data.json`
+     - **RCR CR2B (0–5)**: Holistic mark per case using official RCR FRCR Part 2B descriptors
+   - **Eligibility**: Restrict to specific trainee levels or individual trainees, or leave unrestricted
    - Results are saved to the tracking database automatically
 
 6. **Save**:
@@ -318,25 +287,7 @@ A JSON configuration file containing:
    - Exams are saved to `department_root/exams/`
    - Share the exam name with trainees
 
-### Example Exam Config
-
-```json
-{
-  "exam_name": "ST1 On-Call Exam Feb 2026",
-  "results_path": "/Volumes/Radiology/tracking/muninn_tracking.db",
-  "name": "ST1 On-Call Exam Feb 2026",
-  "course_type": "exam",
-  "modality": "mixed",
-  "eligible_levels": ["ST1", "ST2"],
-  "cases": [
-    {
-      "id": "01_Acute_Appendicitis",
-      "path": "/Volumes/Radiology/Library/Abdomen/01_Acute_Appendicitis",
-      "diagnosis": "Acute appendicitis"
-    }
-  ]
-}
-```
+> For the full JSON file format, see the [Technical Reference](TECHNICAL_REFERENCE.md).
 
 ---
 
@@ -360,19 +311,30 @@ Grade trainee submissions from completed exams.
    - View the DICOM images alongside their written answers
    - See their: findings, diagnosis, differential, management (if applicable)
    - See time taken per case
+   - Cases with an **amber banner** ("Not submitted") were not answered — this occurs when the exam timer expired before the trainee responded to the case
 
-4. **Mark each answer**:
-   - Score: 0-10 scale
-   - Feedback: Written comments for the trainee
-   - Marks are saved automatically to the tracking database
+4. **Mark each answer** using the exam's marking scheme:
+   - **Legacy**: Enter a score (0–10) and free-text feedback per case
+   - **Dimension**: Score each clinical dimension (Detection, Description, Diagnosis, Management) separately; flag critical misses where a key finding was completely missed
+   - **RCR CR2B**: Enter a holistic 0–5 mark per case using the standard RCR descriptors
+   - Marks are **auto-saved** as you enter them
 
-5. **Generate summary**:
-   - Click "Generate Summary" for per-candidate statistics
-   - Shows: total score, average, time taken, per-case breakdown
+5. **Review analytics** (dimension exams):
+   - The marking header shows aggregate statistics: average total percentage, per-dimension averages, and weakest skill across all marked cases
+   - Critical miss count is displayed if any cases were flagged
 
 6. **Export**:
-   - **Save Marks**: JSON file with all marks and feedback
-   - **Export CSV**: Spreadsheet format for reporting
+   - **Export CSV**: Spreadsheet with all marks, feedback, and time taken (in minutes)
+
+### Marking Schemes Explained
+
+| Scheme | Score Range | Best For |
+|--------|-------------|----------|
+| **Legacy** | 0–10 per case | Informal practice exams, quick turnaround |
+| **Dimension** | Configurable per dimension | Structured feedback on specific clinical skills |
+| **RCR CR2B** | 0–5 per case | Mock FRCR Part 2B sessions |
+
+The marking scheme is set in the exam config file and cannot be changed after an exam has started. For dimension scoring, per-case rubric weights are configured in each case's `case_data.json` via the Case Loader.
 
 ---
 
@@ -405,20 +367,6 @@ The registry is automatically created when you set up your department folder. Tr
 2. Select a CSV file with columns: `name`, `email`, `level`, `supervisor`
 3. Trainees are added to the registry
 
-#### Trainee Data
-
-Trainees are stored in the `trainees` table of `tracking/muninn_tracking.db`:
-
-| Column | Description |
-|--------|-------------|
-| `id` | Unique identifier (auto-generated or from CSV) |
-| `name` | Display name |
-| `email` | Contact email |
-| `level` | Training level (ST1-ST5, Fellow, Consultant) |
-| `supervisor` | Supervising consultant |
-| `active` | Whether trainee appears in selection dropdowns |
-| `pin_hash` | Hashed PIN for exam authentication (optional) |
-
 #### Managing Trainee PINs
 
 PINs provide exam access control. When a trainee has a PIN set, they must enter it before starting any exam.
@@ -440,7 +388,7 @@ PINs provide exam access control. When a trainee has a PIN set, they must enter 
 - **Practice mode**: PINs are not required for practice, only exams
 - **Mixed departments**: Set PINs only for trainees taking formal exams
 
-> **Security note:** PINs are stored as Argon2 hashes in the database, not in plain text. The original PIN cannot be recovered - only reset by an administrator.
+> **Security note:** PINs are stored as irreversible hashes. The original PIN cannot be recovered — only reset by an administrator.
 
 ### Training Dashboard
 
@@ -451,9 +399,6 @@ View department-wide statistics and individual progress.
 1. Go to Department → Dashboard tab
 2. Set the date range (from/to)
 3. Click "Generate Report"
-4. The report queries activity data from `tracking/muninn_tracking.db`:
-   - Practice attempts from the `practice_attempts` table
-   - Exam submissions and marks from the `exam_submissions` and `marking_entries` tables
 
 #### Report Contents
 
@@ -478,8 +423,7 @@ View department-wide statistics and individual progress.
 
 #### Exporting Reports
 
-- **Save Report**: JSON format for programmatic analysis
-- **Export CSV**: Spreadsheet format for sharing
+- **Export CSV**: Spreadsheet format for sharing with TPDs or for ARCP portfolios
 
 ---
 
@@ -496,8 +440,7 @@ Click **Database** in the navigation bar to enter Case Database mode.
 Before using the Case Database, build the search index:
 
 1. Click **Rebuild Index** on the home page
-2. The scanner finds all cases in your library
-3. Index is stored at `library/.muninn/case_index.db`
+2. The scanner finds all cases in your library and builds a searchable index
 
 ### Analytics Columns
 
@@ -575,30 +518,7 @@ All critical actions in Muninn and Muninn Admin are logged to an audit trail for
 
 ### What's Logged
 
-| Action | Description | Logged By |
-|--------|-------------|-----------|
-| `exam_start` | Trainee began an exam | Muninn |
-| `exam_submit` | Trainee submitted a case answer | Muninn |
-| `pin_failed` | Failed PIN verification attempt | Muninn |
-| `mark_entered` | Examiner marked a submission | Muninn Admin |
-| `trainee_added` | New trainee added to registry | Muninn Admin |
-| `trainee_modified` | Trainee details updated | Muninn Admin |
-| `trainee_removed` | Trainee removed from registry | Muninn Admin |
-| `pin_changed` | Trainee PIN set or cleared | Muninn Admin |
-
-### Audit Log Schema
-
-Logs are stored in the `audit_log` table of `tracking/muninn_tracking.db`:
-
-| Column | Description |
-|--------|-------------|
-| `timestamp` | When the action occurred (UTC) |
-| `actor` | Trainee ID or "admin" |
-| `action` | Action type (see above) |
-| `target_type` | What was affected (exam, trainee, submission) |
-| `target_id` | Specific identifier (exam name, trainee ID, case ID) |
-| `details` | JSON blob with additional context |
-| `app_version` | Version of the app that logged the action |
+Every exam start, case submission, failed PIN attempt, and marking action is recorded automatically. Registry changes (adding, editing, or removing trainees, setting PINs) are also logged.
 
 ### Viewing Audit Logs
 
@@ -696,67 +616,19 @@ If the tracking database becomes corrupted:
 
 ---
 
-## Integration with Muninn
+## Network Setup
 
-### Data Flow
+For multi-user deployments, every trainee and administrator points their app at the same department folder (a network share or mapped drive).
 
-```
-MUNINN ADMIN                           MUNINN (Trainee)
-─────────────────────────────────────────────────────────
-DICOM Organizer
-  └─▶ case_data.json (series[]) ──────┐
-                                       ▼
-Case Loader                            Practice Mode
-  └─▶ case_data.json ─────────────────▶ Case display (fast load)
-      (preserves series[], adds        │
-       diagnosis, history, etc.)       │
-  └─▶ key_slices.json ────────────────▶ Key findings
-  └─▶ STUDY_NOTES.md ─────────────────▶ Model answers
+- All trainees see the same playlists
+- Exam submissions go directly to the shared tracking database
+- Muninn Admin reads that same database for marking and reports
 
-Playlist Builder                       Playlist Browser
-  └─▶ library/playlists/*.json ───────▶ Browse, filter, progress
+Example department root paths:
+- macOS: `/Volumes/RadiologyShare/`
+- Windows: `\\server\RadiologyShare\`
 
-Exam Builder                           Exam Mode
-  └─▶ exams/exam_config.json ─────────▶ Exam loading
-                                          │
-                                          ▼
-         muninn_tracking.db ◀─────────────┴───── Submissions
-         ├── trainees ────────────────────────▶ Name dropdown
-         ├── practice_attempts ◀──────────────── Practice activity
-         ├── exam_submissions ◀───────────────── Exam answers
-         └── marking_entries ──────────────────▶ Graded marks
-
-Department
-  └─◀ muninn_tracking.db ──────────── Reports, analytics
-
-Case Database
-  └─◀ muninn_tracking.db ──────────── Per-case analytics
-  └─◀ case_index.db ───────────────── Case metadata
-```
-
-**Performance note:** The `series[]` array in `case_data.json` contains all DICOM metadata needed for display (UIDs, descriptions, window/level, dimensions). Muninn reads this single JSON file instead of scanning DICOM headers from each series folder, enabling instant case loading even on network drives.
-
-### Network Setup
-
-For multi-user deployments, all apps use the same department folder:
-
-1. **Configure department folder** on first launch (or via Department Settings)
-2. **Playlists** are saved to `department_root/library/playlists/`
-3. **Exam configs** are saved to `department_root/exams/`
-4. **All tracking data** is stored in `department_root/tracking/muninn_tracking.db`
-   - Trainee registry
-   - Practice attempts
-   - Exam submissions
-   - Graded marks
-
-All trainees selecting the same department folder will:
-- See the same playlists
-- Submit to the same tracking database
-- Appear in the trainee dropdown
-
-Example paths:
-- macOS: `/Volumes/RadiologyShare/` (department root)
-- Windows: `\\server\RadiologyShare\` (department root)
+> **For database schemas, file formats, and security details**, see the [Technical Reference](TECHNICAL_REFERENCE.md).
 
 ---
 
@@ -809,532 +681,21 @@ Example paths:
 
 ---
 
-## Technical Reference
+## Troubleshooting
 
-### Database Schemas
+### "Database is locked"
 
-#### Tracking Database (`muninn_tracking.db`)
+Multiple users hitting the database simultaneously on a slow network can occasionally cause this. Wait a few seconds and retry. If it happens frequently, check that your department folder is on a fast, local network share rather than a VPN connection.
 
-The central tracking database uses SQLite with WAL mode for concurrent network access.
+### "Case index may be outdated"
 
-**Schema Version:** 4
+If you edit case files outside of Muninn Admin, the search index can fall behind. Click **Rebuild Index** in the Case Database to refresh it.
 
-```sql
--- Trainee registry
-CREATE TABLE trainees (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT,
-    level TEXT NOT NULL DEFAULT 'Unknown',
-    start_date TEXT,
-    supervisor TEXT,
-    active INTEGER DEFAULT 1,
-    pin_hash TEXT,                    -- Argon2 hash (nullable)
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
-);
+### "License signature verification failed"
 
--- Practice attempts (from Muninn trainee app)
-CREATE TABLE practice_attempts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    trainee_id TEXT NOT NULL,
-    case_id TEXT NOT NULL,
-    case_path TEXT NOT NULL,
-    course_name TEXT,
-    course_type TEXT,
-    modality TEXT,
-    diagnosis TEXT,
-    submitted_findings TEXT,
-    submitted_diagnosis TEXT,
-    submitted_differential TEXT,
-    submitted_management TEXT,
-    self_rating INTEGER CHECK (self_rating IS NULL OR (self_rating >= 1 AND self_rating <= 5)),
-    time_taken_seconds INTEGER,
-    practice_mode TEXT,               -- 'exam' or 'learning'
-    submitted_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (trainee_id) REFERENCES trainees(id)
-);
+The license file has been corrupted or edited. Request a replacement from your license contact.
 
--- Exam definitions
-CREATE TABLE exams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exam_name TEXT NOT NULL UNIQUE,
-    config_path TEXT,
-    results_path TEXT,
-    course_type TEXT,
-    modality TEXT,
-    case_count INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT (datetime('now'))
-);
+### DICOM not loading
 
--- Exam submissions (raw trainee answers)
-CREATE TABLE exam_submissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exam_id INTEGER NOT NULL,
-    trainee_id TEXT NOT NULL,
-    case_id TEXT NOT NULL,
-    case_path TEXT NOT NULL,
-    correct_diagnosis TEXT,
-    submitted_findings TEXT,
-    submitted_diagnosis TEXT,
-    submitted_differential TEXT,
-    submitted_management TEXT,
-    self_rating INTEGER CHECK (self_rating IS NULL OR (self_rating >= 1 AND self_rating <= 5)),
-    time_taken_seconds INTEGER,
-    exam_type TEXT CHECK (exam_type IN ('short', 'long')),
-    submitted_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (exam_id) REFERENCES exams(id),
-    FOREIGN KEY (trainee_id) REFERENCES trainees(id),
-    UNIQUE(exam_id, trainee_id, case_id)
-);
+Check that DICOM files are present in the case folder and that Muninn Admin has read access. Re-run the DICOM Organizer if the folder structure looks wrong.
 
--- Marking entries (graded by educators)
-CREATE TABLE marking_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exam_id INTEGER NOT NULL,
-    trainee_id TEXT NOT NULL,
-    case_id TEXT NOT NULL,
-    mark REAL CHECK (mark IS NULL OR (mark >= 0 AND mark <= 10)),
-    feedback TEXT,
-    marker_id TEXT,
-    marked_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (exam_id) REFERENCES exams(id),
-    FOREIGN KEY (trainee_id) REFERENCES trainees(id),
-    UNIQUE(exam_id, trainee_id, case_id)
-);
-
--- Audit log for compliance
-CREATE TABLE audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT DEFAULT (datetime('now')),
-    actor TEXT NOT NULL,              -- trainee_id or 'admin'
-    action TEXT NOT NULL,             -- exam_start, exam_submit, pin_failed, etc.
-    target_type TEXT,                 -- exam, trainee, submission
-    target_id TEXT,                   -- exam_name, trainee_id, case_id
-    details TEXT,                     -- JSON blob
-    app_version TEXT
-);
-
--- License storage (single row)
-CREATE TABLE license (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    license_key TEXT NOT NULL,
-    license_type TEXT NOT NULL DEFAULT 'standard',
-    department_name TEXT NOT NULL,
-    issued_at TEXT NOT NULL,
-    expires_at TEXT,
-    signature TEXT NOT NULL,
-    grace_period_days INTEGER DEFAULT 30,
-    activated_at TEXT DEFAULT (datetime('now'))
-);
-
--- License event log
-CREATE TABLE license_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT DEFAULT (datetime('now')),
-    event TEXT NOT NULL,
-    details TEXT,
-    app_name TEXT NOT NULL
-);
-
--- Backup metadata
-CREATE TABLE backup_metadata (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    backup_path TEXT NOT NULL,
-    backup_type TEXT NOT NULL,        -- daily, weekly, manual
-    created_at TEXT DEFAULT (datetime('now')),
-    size_bytes INTEGER,
-    schema_version TEXT
-);
-
--- Exam distribution tracking
-CREATE TABLE exam_distributions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exam_name TEXT NOT NULL,
-    exam_config_path TEXT NOT NULL,
-    trainee_id TEXT NOT NULL,
-    distributed_at TEXT DEFAULT (datetime('now')),
-    pin_generated INTEGER DEFAULT 0,
-    FOREIGN KEY (trainee_id) REFERENCES trainees(id)
-);
-```
-
-#### Case Index Database (`case_index.db`)
-
-Full-text search index built by Muninn Admin, used by both apps.
-
-**Schema Version:** 8
-
-```sql
--- FTS5 virtual table for full-text search
-CREATE VIRTUAL TABLE cases_fts USING fts5(
-    case_id,
-    diagnosis,
-    history,
-    findings,
-    differential,
-    subspecialty,
-    modality,
-    author,
-    content=cases,
-    content_rowid=id
-);
-
--- Case metadata
-CREATE TABLE cases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    case_id TEXT NOT NULL,
-    path TEXT NOT NULL UNIQUE,
-    diagnosis TEXT,
-    history TEXT,
-    modality TEXT,
-    subspecialty TEXT,
-    difficulty TEXT,
-    author TEXT,
-    has_notes INTEGER DEFAULT 0,
-    has_key_slices INTEGER DEFAULT 0,
-    series_count INTEGER DEFAULT 0,
-    indexed_at TEXT DEFAULT (datetime('now')),
-    file_modified_at TEXT              -- For staleness detection
-);
-
--- Index metadata
-CREATE TABLE index_metadata (
-    key TEXT PRIMARY KEY,
-    value TEXT
-);
-```
-
-### File Formats
-
-#### case_data.json
-
-Complete case metadata including DICOM series information.
-
-```json
-{
-  "case_id": "01_Acute_Appendicitis",
-  "diagnosis": "Acute appendicitis with perforation",
-  "history": "45-year-old male with 2 days of RIF pain and fever",
-  "modality": "CT",
-  "body_region": "Abdomen",
-  "subspecialty": "GI",
-  "difficulty": "intermediate",
-  "age": "45",
-  "gender": "M",
-  "author": "Dr Smith",
-  "differential": ["Mesenteric adenitis", "Crohn's disease", "Ovarian pathology"],
-  "created_at": "2026-02-14T10:30:00Z",
-  "updated_at": "2026-02-14T14:20:00Z",
-  "series": [
-    {
-      "uid": "1.2.840.113619.2.55.3.12345",
-      "description": "Axial CT Abdomen Pelvis",
-      "modality": "CT",
-      "folder": "01_Axial_CT_Abdomen_Pelvis",
-      "slice_count": 245,
-      "window_center": 40,
-      "window_width": 400,
-      "rows": 512,
-      "columns": 512,
-      "bits_stored": 16,
-      "pixel_spacing": [0.7, 0.7],
-      "slice_thickness": 1.25
-    },
-    {
-      "uid": "1.2.840.113619.2.55.3.12346",
-      "description": "Coronal Reformat",
-      "modality": "CT",
-      "folder": "02_Coronal_Reformat",
-      "slice_count": 180,
-      "window_center": 40,
-      "window_width": 400
-    }
-  ]
-}
-```
-
-#### key_slices.json
-
-Annotated findings with slice references.
-
-```json
-{
-  "findings": [
-    {
-      "id": "f1",
-      "series": "01_Axial_CT_Abdomen_Pelvis",
-      "slice": 142,
-      "description": "Dilated appendix (12mm) with periappendiceal fat stranding",
-      "window_center": 40,
-      "window_width": 400
-    },
-    {
-      "id": "f2",
-      "series": "01_Axial_CT_Abdomen_Pelvis",
-      "slice": 148,
-      "description": "Appendicolith at the base",
-      "window_center": 400,
-      "window_width": 1500
-    },
-    {
-      "id": "f3",
-      "series": "02_Coronal_Reformat",
-      "slice": 85,
-      "description": "Free fluid in the pelvis",
-      "window_center": 40,
-      "window_width": 400
-    }
-  ]
-}
-```
-
-#### STUDY_NOTES.md
-
-Model answer in Markdown format.
-
-```markdown
-# Acute Appendicitis with Perforation
-
-## Findings
-- Dilated appendix measuring 12mm in diameter (normal <6mm)
-- Periappendiceal fat stranding
-- Appendicolith at the appendix base
-- Small volume free fluid in the pelvis
-- No drainable abscess collection
-
-## Diagnosis
-Acute appendicitis with likely microperforation.
-
-## Differential Considerations
-1. Mesenteric adenitis - usually no appendiceal dilatation
-2. Crohn's disease - would expect terminal ileal thickening
-3. Right ovarian pathology - in females, check ovaries
-
-## Management
-- Urgent surgical referral for appendicectomy
-- IV antibiotics
-- If abscess present >5cm, consider percutaneous drainage
-
-## Teaching Points
-- Appendix >6mm is abnormal
-- Fat stranding indicates inflammation
-- Appendicolith present in ~25% of cases
-- Look for secondary signs: reactive lymph nodes, caecal wall thickening
-```
-
-#### Playlist JSON
-
-```json
-{
-  "name": "On-Call Essentials",
-  "description": "Must-know emergency cases for junior trainees",
-  "author": "Dr Smith",
-  "created_at": "2026-02-14T10:00:00Z",
-  "updated_at": "2026-02-20T15:30:00Z",
-  "modality": "mixed",
-  "specialty": ["emergency", "oncall"],
-  "min_level": "ST1",
-  "recommended_levels": ["ST1", "ST2"],
-  "cases": [
-    {
-      "path": "@library/emergency/01_Pneumothorax",
-      "notes": "Classic tension pneumothorax - note mediastinal shift"
-    },
-    {
-      "path": "@library/abdomen/acute/02_Bowel_Obstruction",
-      "notes": null
-    }
-  ]
-}
-```
-
-#### Exam Config JSON
-
-```json
-{
-  "exam_name": "ST1 On-Call Assessment Feb 2026",
-  "name": "ST1 On-Call Assessment Feb 2026",
-  "course_type": "exam",
-  "modality": "mixed",
-  "time_limit_minutes": 90,
-  "eligible_levels": ["ST1", "ST2"],
-  "eligible_trainee_ids": null,
-  "cases": [
-    {
-      "id": "01_Pneumothorax",
-      "path": "@library/emergency/01_Pneumothorax",
-      "diagnosis": "Tension pneumothorax"
-    },
-    {
-      "id": "02_Bowel_Obstruction",
-      "path": "@library/abdomen/acute/02_Bowel_Obstruction",
-      "diagnosis": "Small bowel obstruction secondary to adhesions"
-    }
-  ]
-}
-```
-
-#### License File (`.muninn-license`)
-
-```json
-{
-  "license_key": "MUNINN-AB12-CD34-EF56-GH78",
-  "license_type": "standard",
-  "department_name": "St George's Radiology",
-  "issued_at": "2026-02-01T00:00:00Z",
-  "expires_at": "2027-02-01T00:00:00Z",
-  "grace_period_days": 30,
-  "signature": "base64-encoded-ed25519-signature"
-}
-```
-
-### Directory Structure
-
-#### Department Root (Network Share)
-
-```
-department_root/
-├── library/                          # Case library
-│   ├── .muninn/                      # Search index (auto-generated)
-│   │   └── case_index.db             # SQLite FTS5 database
-│   ├── playlists/                    # Curated collections
-│   │   ├── on-call-essentials.json
-│   │   └── frcr-2b-prep.json
-│   ├── courses/                      # Organized by course
-│   │   ├── ct-abdomen/
-│   │   │   ├── course.json           # Optional course metadata
-│   │   │   └── 01_Acute_Appendicitis/
-│   │   │       ├── case_data.json
-│   │   │       ├── key_slices.json
-│   │   │       ├── STUDY_NOTES.md
-│   │   │       └── 01_Axial_CT/
-│   │   │           └── *.dcm
-│   │   └── ct-chest/
-│   │       └── ...
-│   └── consultants/                  # Consultant workspaces
-│       └── dr-smith/
-│           └── interesting-cases/
-│               └── ...
-├── exams/                            # Exam configurations
-│   ├── st1-oncall-2026-02.json
-│   └── frcr-mock-2026-03.json
-├── reports/                          # Generated reports (CSV/JSON)
-│   └── training_report_2026-02.csv
-└── tracking/                         # Central database
-    ├── muninn_tracking.db            # Main tracking database
-    └── backups/
-        ├── daily/
-        ├── weekly/
-        └── manual/
-```
-
-#### Local App Data
-
-**macOS:**
-```
-~/Library/Application Support/com.muninn.dicom/
-├── muninn.db                         # Local SQLite (attempts, progress)
-└── config.json                       # App settings
-```
-
-**Windows:**
-```
-%APPDATA%\com.muninn.dicom\
-├── muninn.db
-└── config.json
-```
-
-### Performance Considerations
-
-#### Network Shares
-
-- **WAL mode**: SQLite uses Write-Ahead Logging for concurrent access
-- **Busy timeout**: 30 seconds to handle network latency
-- **Retry logic**: 5 retries with exponential backoff for transient failures
-- **Series caching**: DICOM metadata stored in `case_data.json` avoids repeated header parsing
-
-#### Large Libraries
-
-- **FTS5 index**: Full-text search scales to thousands of cases
-- **Lazy loading**: Case list loads metadata only; DICOM loaded on demand
-- **Index staleness**: File modification times checked against index to detect changes
-- **Rebuild incremental**: Future versions may support incremental index updates
-
-### Security
-
-#### PIN Hashing
-
-Trainee PINs are hashed using Argon2id with:
-- Memory: 19MB
-- Iterations: 2
-- Parallelism: 1
-- Salt: 16 bytes (random per PIN)
-
-PINs cannot be recovered from the hash. Administrators can only reset PINs, not view them.
-
-#### License Verification
-
-Licenses use Ed25519 digital signatures:
-- **Public key**: Embedded in app binary (verification only)
-- **Private key**: Held by license issuer (never distributed)
-- **Offline verification**: No network call required after initial import
-
-Signed message format:
-```
-{license_key}|{license_type}|{department_name}|{issued_at}|{expires_at}
-```
-
-#### Data Protection
-
-- All data stored locally or on department network share
-- No cloud services or external API calls (except optional AI feedback)
-- DICOM files remain anonymized as exported from PACS
-- Audit logs provide accountability trail
-
-### Troubleshooting
-
-#### Database Locked
-
-**Symptom:** "Database is locked" error when multiple users access simultaneously.
-
-**Cause:** SQLite busy timeout exceeded on slow network.
-
-**Solution:**
-1. Ensure department folder is on a fast network share (not VPN)
-2. Close unnecessary Muninn/Muninn Admin instances
-3. Wait 30 seconds and retry
-
-#### Index Out of Date
-
-**Symptom:** Case Database shows outdated metadata or missing cases.
-
-**Cause:** `case_data.json` files modified outside of Muninn Admin.
-
-**Solution:**
-1. Click **Rebuild Index** on the home page
-2. Wait for scan to complete
-3. Verify case count matches expectations
-
-#### License Invalid
-
-**Symptom:** "License signature verification failed" error.
-
-**Cause:** License file corrupted or tampered with.
-
-**Solution:**
-1. Request a new license file from the issuer
-2. Ensure license file is copied correctly (no truncation)
-3. Do not edit the `.muninn-license` file manually
-
-#### DICOM Not Loading
-
-**Symptom:** Case shows "No DICOM files found" or blank viewer.
-
-**Cause:** DICOM files missing or in unexpected format.
-
-**Solution:**
-1. Verify `.dcm` files exist in series subfolders
-2. Check file permissions (read access required)
-3. Re-run DICOM Organizer if folder structure is incorrect
-4. Check `case_data.json` has correct `series[].folder` paths

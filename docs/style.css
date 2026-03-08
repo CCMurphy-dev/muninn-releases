@@ -126,6 +126,7 @@ a:hover {
 
 .logo-icon {
     font-size: 1.5rem;
+    vertical-align: middle;
 }
 
 .nav-links {
