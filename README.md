@@ -133,7 +133,7 @@ Muninn requires a per-department license. Licenses are:
 - **Annual subscription** - with 30-day grace period for renewal
 - **Unlimited trainees** - per department, not per seat
 
-**Request a license:** [REDACTED](mailto:REDACTED?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
+**Request a license:** [Contact the developer](mailto:REDACTED?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
 
 ---
 
@@ -202,7 +202,7 @@ Built with [Tauri](https://tauri.app), [Svelte](https://svelte.dev), and [Corner
 
 ## Contact
 
-- **License inquiries:** [REDACTED](mailto:REDACTED?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
+- **License inquiries:** [Contact the developer](mailto:REDACTED?subject=%5BMUNINN-LIC%5D%20License%20Inquiry)
 - **Bug reports:** [GitHub Issues](https://github.com/CCMurphy-dev/muninn-releases/issues)
 - **Feature requests:** [GitHub Discussions](https://github.com/CCMurphy-dev/muninn-releases/discussions)
 

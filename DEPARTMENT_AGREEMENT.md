@@ -5,7 +5,7 @@
 ## Parties
 
 **Licensor:** Dr Christopher Murphy
-**Email:** REDACTED
+**Email:** [Contact the developer](mailto:REDACTED?subject=[MUNINN])
 
 **Licensee Department:** _______________________________________________
 
@@ -108,4 +108,4 @@ Date: _______________________________________________
 
 ---
 
-*Return signed agreement to: REDACTED*
+*Return signed agreement to: [the developer](mailto:REDACTED?subject=[MUNINN])*

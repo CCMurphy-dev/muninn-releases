@@ -30,4 +30,4 @@ If you choose to enable AI feedback, your configured AI provider will receive th
 
 ## Contact
 
-Questions: [REDACTED](mailto:REDACTED?subject=[MUNINN])
+Questions: [Contact the developer](mailto:REDACTED?subject=[MUNINN])

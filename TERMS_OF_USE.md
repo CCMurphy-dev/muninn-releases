@@ -38,4 +38,4 @@ These terms are governed by the laws of England and Wales.
 
 ## Contact
 
-Questions: [REDACTED](mailto:REDACTED?subject=[MUNINN])
+Questions: [Contact the developer](mailto:REDACTED?subject=[MUNINN])

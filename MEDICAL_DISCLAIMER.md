@@ -35,4 +35,4 @@ You are responsible for your own learning and clinical practice. Muninn suppleme
 
 ## Contact
 
-Questions: [REDACTED](mailto:REDACTED?subject=[MUNINN])
+Questions: [Contact the developer](mailto:REDACTED?subject=[MUNINN])
