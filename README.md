@@ -64,7 +64,31 @@ Muninn provides:
 
 ## Screenshots
 
-*Coming soon*
+### Muninn Admin
+
+<div align="center">
+  <img src="docs/screenshots/1. muninn-admin-home.png" width="32%" alt="Home">
+  <img src="docs/screenshots/2.1 muninn-admin-organizer.png" width="32%" alt="DICOM Organizer">
+  <img src="docs/screenshots/2.2 muninn-admin-organizer-2.png" width="32%" alt="DICOM Organizer 2">
+</div>
+
+<div align="center">
+  <img src="docs/screenshots/3. muninn-admin database.png" width="32%" alt="Case Database">
+  <img src="docs/screenshots/3.1 muninn-admin database analytics.png" width="32%" alt="Database Analytics">
+  <img src="docs/screenshots/4.0 muninn-admin playlist.png" width="32%" alt="Playlist Builder">
+</div>
+
+<div align="center">
+  <img src="docs/screenshots/5 muninn-admin exam-builder.png" width="32%" alt="Exam Builder">
+  <img src="docs/screenshots/6.0 muninn-admin exam marker.png" width="32%" alt="Exam Marker">
+  <img src="docs/screenshots/7.0 muninn-admin dashboard registry.png" width="32%" alt="Trainee Registry">
+</div>
+
+<div align="center">
+  <img src="docs/screenshots/7.1 muninn-admin dashboard overview.png" width="32%" alt="Dashboard Overview">
+  <img src="docs/screenshots/7.2 muninn-admin trainee-analytics.png" width="32%" alt="Trainee Analytics">
+  <img src="docs/screenshots/8.0 muninn-admin SQL database.png" width="32%" alt="SQL Database">
+</div>
 
 ---
 
