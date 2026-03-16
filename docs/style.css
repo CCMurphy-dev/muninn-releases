@@ -292,7 +292,9 @@ body.theme-transition *::after {
 
 .carousel-slide img {
     width: 100%;
-    height: auto;
+    height: 500px;
+    object-fit: cover;
+    object-position: top;
     display: block;
     border-radius: var(--radius);
 }
