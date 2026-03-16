@@ -43,8 +43,25 @@
                 <a href="#how-it-works" class="btn btn-secondary">Learn More</a>
             </div>
             <div class="hero-image">
-                <div class="screenshot-placeholder">
-                    <span>Screenshots coming soon</span>
+                <div class="carousel" id="carousel">
+                    <div class="carousel-track">
+                        <div class="carousel-slide active"><img src="screenshots/1. muninn-admin-home.png" alt="Home"></div>
+                        <div class="carousel-slide"><img src="screenshots/2.1 muninn-admin-organizer.png" alt="DICOM Organizer"></div>
+                        <div class="carousel-slide"><img src="screenshots/2.2 muninn-admin-organizer-2.png" alt="DICOM Organizer"></div>
+                        <div class="carousel-slide"><img src="screenshots/3. muninn-admin database.png" alt="Case Database"></div>
+                        <div class="carousel-slide"><img src="screenshots/3.1 muninn-admin database analytics.png" alt="Database Analytics"></div>
+                        <div class="carousel-slide"><img src="screenshots/4.0 muninn-admin playlist.png" alt="Playlist Builder"></div>
+                        <div class="carousel-slide"><img src="screenshots/5 muninn-admin exam-builder.png" alt="Exam Builder"></div>
+                        <div class="carousel-slide"><img src="screenshots/6.0 muninn-admin exam marker.png" alt="Exam Marker"></div>
+                        <div class="carousel-slide"><img src="screenshots/7.0 muninn-admin dashboard registry.png" alt="Trainee Registry"></div>
+                        <div class="carousel-slide"><img src="screenshots/7.1 muninn-admin dashboard overview.png" alt="Dashboard Overview"></div>
+                        <div class="carousel-slide"><img src="screenshots/7.2 muninn-admin trainee-analytics.png" alt="Trainee Analytics"></div>
+                        <div class="carousel-slide"><img src="screenshots/8.0 muninn-admin SQL database.png" alt="SQL Database"></div>
+                    </div>
+                    <button class="carousel-btn carousel-prev" aria-label="Previous">&#8592;</button>
+                    <button class="carousel-btn carousel-next" aria-label="Next">&#8594;</button>
+                    <div class="carousel-caption"></div>
+                    <div class="carousel-dots"></div>
                 </div>
             </div>
         </div>
@@ -346,6 +363,48 @@
             </div>
         </div>
     </footer>
+    <script>
+    (function() {
+        var carousel = document.getElementById('carousel');
+        if (!carousel) return;
+        var slides = carousel.querySelectorAll('.carousel-slide');
+        var captionEl = carousel.querySelector('.carousel-caption');
+        var dotsEl = carousel.querySelector('.carousel-dots');
+        var current = 0;
+        var timer;
+
+        // Build dots
+        slides.forEach(function(slide, i) {
+            var dot = document.createElement('button');
+            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            dot.addEventListener('click', function() { goTo(i); resetTimer(); });
+            dotsEl.appendChild(dot);
+        });
+
+        function goTo(n) {
+            slides[current].classList.remove('active');
+            dotsEl.children[current].classList.remove('active');
+            current = (n + slides.length) % slides.length;
+            slides[current].classList.add('active');
+            dotsEl.children[current].classList.add('active');
+            captionEl.textContent = slides[current].querySelector('img').alt;
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timer = setInterval(function() { goTo(current + 1); }, 4000);
+        }
+
+        carousel.querySelector('.carousel-prev').addEventListener('click', function() { goTo(current - 1); resetTimer(); });
+        carousel.querySelector('.carousel-next').addEventListener('click', function() { goTo(current + 1); resetTimer(); });
+        carousel.addEventListener('mouseenter', function() { clearInterval(timer); });
+        carousel.addEventListener('mouseleave', resetTimer);
+
+        goTo(0);
+        resetTimer();
+    })();
+    </script>
     <script>
     (function() {
         var toggle = document.querySelector('.theme-toggle');
